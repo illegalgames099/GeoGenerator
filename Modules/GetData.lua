@@ -73,7 +73,10 @@ end
 
 local function getOSM(coords: string)
 
-	local url = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];"..
+	local timeout = 300
+
+	local url = "https://overpass-api.de/api/interpreter?data=[out:json]" ..
+		"[timeout:".. timeout .."];"..
 		"(node("..coords..");way("..coords..");)->.a;out body;>;out skel qt;"..
 		"(rel[!network](bw.a)("..coords.."););out body;"
 
@@ -497,4 +500,5 @@ return getData
 	local url = "https://overpass-api.de/api/interpreter?data=[out:json];(way("..coords.."););out body;"
 
 ]]
+
 
