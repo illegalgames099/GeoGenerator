@@ -37,7 +37,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		local T = WP[tag]["nil"]
 		T.disabled = not EP["Building"]["Enabled"]
 		T.heightPerFloor = EP["Building"]["Height per floor"]
-		T.deafultHeight = EP["Building"]["Deafult Height"]
+		T.defaultHeight = EP["Building"]["Default Height"]
 		T.color = EP["Building"]["Color"]
 		T.material = EP["Building"]["Material"]
 

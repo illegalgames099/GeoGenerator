@@ -4,6 +4,7 @@
 local module = {}
 
 local RS = game:GetService("RunService")
+local TS = game:GetService("TextService")
 local plugin = script:FindFirstAncestorWhichIsA("Plugin")
 local theme = tostring(settings().Studio.Theme)
 local objects = script.Parent.Parent.Objects
@@ -38,6 +39,10 @@ function Widget.loading(widgetText: string)
 		canvas.TextLabel.TextColor = BrickColor.new(0,0,0)
 	end
 	
+	canvas.TextLabel.Text = widgetText
+	canvas.ImageLabel.Image = loadingWheelId
+	canvas.ImageLabel.ImageColor3 = Color3.fromRGB(43, 177, 255)
+	
 	local widgetInfo = DockWidgetPluginGuiInfo.new(
 		Enum.InitialDockState.Float,
 		false,
@@ -48,7 +53,7 @@ function Widget.loading(widgetText: string)
 		125
 	)
 
-	local interface = plugin:CreateDockWidgetPluginGui(
+	local interface = plugin:CreateDockWidgetPluginGuiAsync(
 		"Loading",
 		widgetInfo
 	)
@@ -62,10 +67,6 @@ function Widget.loading(widgetText: string)
 	interface.Title = "Loading"
 	interface.Name = "WorldLoader Loading"
 	interface.Enabled = true
-	
-	canvas.TextLabel.Text = widgetText
-	canvas.ImageLabel.Image = loadingWheelId
-	canvas.ImageLabel.ImageColor3 = Color3.fromRGB(43, 177, 255)
 	
 	canvas.Parent = interface
 	
@@ -101,18 +102,34 @@ function Widget.error(widgetText: string)
 		canvas.BackgroundColor3 = Color3.new(1, 1, 1)
 		canvas.TextLabel.TextColor = BrickColor.new(0,0,0)
 	end
-
+	
+	canvas.TextLabel.Text = widgetText
+	canvas.ImageLabel.Image = ErrorCrossId
+	canvas.ImageLabel.ImageColor3 = Color3.new(1,0,0)
+	
+	-- dynamicaly resize window according to widgetText lenght
+	local windowYPadding = 50
+	local textSize = TS:GetTextSize(
+		widgetText,
+		canvas.TextLabel.TextSize,
+		canvas.TextLabel.Font,
+		Vector2.new(canvas.TextLabel.Size.X.Offset, 99999)
+	)
+	
+	local windowYSize = math.max(textSize.Y + windowYPadding, 125)
+	
+	-- create widget
 	local widgetInfo = DockWidgetPluginGuiInfo.new(
 		Enum.InitialDockState.Float,
 		false,
 		false,
 		350,
-		125,
+		windowYSize,
 		350,
-		125
+		windowYSize
 	)
 
-	local interface = plugin:CreateDockWidgetPluginGui(
+	local interface = plugin:CreateDockWidgetPluginGuiAsync(
 		"Error",
 		widgetInfo
 	)
@@ -126,10 +143,6 @@ function Widget.error(widgetText: string)
 	interface.Title = "Error"
 	interface.Name = "WorldLoader Error"
 	interface.Enabled = true
-
-	canvas.TextLabel.Text = widgetText
-	canvas.ImageLabel.Image = ErrorCrossId
-	canvas.ImageLabel.ImageColor3 = Color3.new(1,0,0)
 
 	canvas.Parent = interface
 
@@ -170,7 +183,7 @@ function Widget.warnToContinue(widgetText: string)
 		150
 	)
 
-	local interface = plugin:CreateDockWidgetPluginGui(
+	local interface = plugin:CreateDockWidgetPluginGuiAsync(
 		"Error",
 		widgetInfo
 	)

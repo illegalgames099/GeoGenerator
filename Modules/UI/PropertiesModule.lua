@@ -83,8 +83,8 @@ function module.start(canvas: CanvasGroup)
 				enable(child,T["Enabled"])
 
 				local oldY = child.Position.Y
-				child.Position = Vector3.new(child.Position.X,oldY-child.Size.X/2+(T["Deafult Height"]/D)/2,child.Position.Z)
-				child.Size = Vector3.new(T["Deafult Height"]/D,child.Size.Y,child.Size.Z)
+				child.Position = Vector3.new(child.Position.X,oldY-child.Size.X/2+(T["Default Height"]/D)/2,child.Position.Z)
+				child.Size = Vector3.new(T["Default Height"]/D,child.Size.Y,child.Size.Z)
 
 				child.Material = T["Material"]
 				child.Color = T["Color"]

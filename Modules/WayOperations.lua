@@ -211,10 +211,6 @@ end
 
 
 
-
-
-
-
 --operation types
 local WayOperations = {
 	["area"] = function(tags: any, model: Instance, properties: any, positions: {Vector3},corners: {Vector3},GenerationRules: any, Map: any)
@@ -345,26 +341,31 @@ local WayOperations = {
 
 	end,
 
-	["building"] = function(tags: any, model: Instance, properties: any, positions: {Vector3},corners: {Vector3},GenerationRules: any, Map: any, elevationMode: string)
+	["building"] = function(tags: any, model: Instance, properties: any, positions: {Vector3}, corners: {Vector3}, GenerationRules: any, Map: any, elevationMode: string)
 		
-		local scale = Values.Scale
+		local scale = Values.Scale.Value
 		local D = 0.28
-		local heightUnderground = 15 --studs
-
+		local heightUnderground = 15 * scale --studs
+		
 		local height = tags["building:levels"]
-
+		
+		-- get height in meters
 		if tags["building:levels"] and tonumber(tags["building:levels"]) then
 			height = tonumber(tags["building:levels"]) * 3/D
 		else
-			height = 4/D --GenerationRules.deafultBuildingHeight /D
+			height = properties.defaultHeight / D
 		end
+		
+		-- convert meters to studs according to scale
+		height *= scale
 		
 		local totalHeight = height
 		local addedHeight = height/2
 		
+		-- add more height so building does not clip through the ground
 		if elevationMode ~= "flat" then
 			totalHeight = height + heightUnderground
-			addedHeight = height/2 - heightUnderground/2
+			addedHeight = height/2 - heightUnderground /2
 		end
 		
 		
@@ -387,7 +388,7 @@ local WayOperations = {
 		for i = 1,#positions-1 do
 			local pos = positions[i]
 			
-			pos += Vector3.new(0,mid.Y + addedHeight,0)
+			pos += Vector3.new(0, mid.Y + addedHeight, 0)
 			
 			table.insert(buildingPositions, pos)
 		end

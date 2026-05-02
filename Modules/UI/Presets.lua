@@ -40,7 +40,7 @@ local Presets = {
 		{
 			["Preset Name"] = "Default",
 			["Enabled"] = true,
-			["Deafult Height"] = 4,
+			["Default Height"] = 4,
 			["Height per floor"] = 3,
 			["Color"] = Color3.fromRGB(202, 180, 150),
 			["Material"] = "Concrete",
@@ -72,7 +72,7 @@ local Presets = {
 	},
 	["Generation Rules"] = {
 		{
-			["Preset Name"] = "Deafult",
+			["Preset Name"] = "Default",
 			["Ro-Scale"] = false,
 			["Ro-Scale Ties"] = false,
 			["Ro-Scale Ballast"] = false,

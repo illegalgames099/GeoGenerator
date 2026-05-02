@@ -72,8 +72,11 @@ end
 
 
 local function getOSM(coords: string)
+	
+	local timeout = 300
 
-	local url = "https://overpass-api.de/api/interpreter?data=[out:json][timeout:25];"..
+	local url = "https://overpass-api.de/api/interpreter?data=[out:json]" ..
+		"[timeout:".. timeout .."];"..
 		"(node("..coords..");way("..coords..");)->.a;out body;>;out skel qt;"..
 		"(rel[!network](bw.a)("..coords.."););out body;"
 
@@ -428,7 +431,11 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 
 		if not elements then
 			loadingWidget:Kill()	
-			WidgetModule.error("Failed to get Street data, check your internet and try again.")
+			local streetDataFailedMessage = "Failed to get street data, this could mean:\n"
+				.. "• No internet connection\n"
+				.. "• Area you are trying to generate is too large\n"
+				.. "• You have downloaded a lot of data and are being rate limited, try again in a few minutes"			
+			WidgetModule.error(streetDataFailedMessage)
 			return
 		end
 		

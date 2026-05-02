@@ -27,7 +27,7 @@ local maxZ
 
 local function findMesh(p: Instance)
 	for _,c in p:GetChildren() do
-		if c:IsA("BlockMesh") or c:IsA("SpecialMesh") or c:IsA("Mesh") then
+		if c:IsA("BlockMesh") or c:IsA("SpecialMesh") or c:IsA("MeshPart") then
 			return c
 		end
 	end
@@ -96,13 +96,13 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 			end
 
 			continue
-			
+
 		end
 
 
 		local cfrm1a = part.CFrame * CFrame.new(part.size.X/2,0,0)
 		local cfrm1b = part.CFrame * CFrame.new(-part.size.X/2,0,0)
-		
+
 		local cfrm2a = prevPart.CFrame * CFrame.new(prevPart.size.X/2,0,0)
 		local cfrm2b = prevPart.CFrame * CFrame.new(-prevPart.size.X/2,0,0)
 
@@ -148,7 +148,7 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 			local mesh = findMesh(p)
 
 			if mesh then
-				
+
 				if mesh:IsA("BlockMesh") then
 					mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,1)
 				else
@@ -164,8 +164,10 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 			p.CFrame = p.CFrame * CFrame.new(0,0,offset)
 
 		end
-		
+
 	end
+	
+	
 	
 end
 
