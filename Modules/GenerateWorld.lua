@@ -1,4 +1,4 @@
--- Responsible for managin generation of all parts
+-- Responsible for managing generation of all parts
 
 -- Modules
 local Coordinates = require(script.Parent:WaitForChild("Coordinates"))
@@ -18,6 +18,18 @@ local function rN(num: number, numDecimalPlaces: number)
 	return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
 end
 
+local function toMaterial(material: any)
+	if typeof(material) == "EnumItem" then
+		return material
+	end
+
+	if type(material) == "string" and Enum.Material[material] then
+		return Enum.Material[material]
+	end
+
+	return material
+end
+
 
 local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3, basePos: Vector3, elevationMode: string, worldScale: number)
 
@@ -32,14 +44,14 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	-- Here i just manually connect editedProperties to WayProperties
 	-- Yeah there are probably better ways to do this
 
-	-- Guildings
+	-- Buildings
 	for _,tag in {"building","building:part"} do
 		local T = WP[tag]["nil"]
 		T.disabled = not EP["Building"]["Enabled"]
 		T.heightPerFloor = EP["Building"]["Height per floor"]
 		T.defaultHeight = EP["Building"]["Default Height"]
 		T.color = EP["Building"]["Color"]
-		T.material = EP["Building"]["Material"]
+		T.material = toMaterial(EP["Building"]["Material"])
 
 		WP[tag]["nil"] = T
 	end
@@ -50,15 +62,19 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		if tag == "path" or tag == "pedestrian" or tag == "footway" then
 			T.disabled = not EP["Road"]["Sidewalk Enabled"]
 			T.color = EP["Road"]["Sidewalk Color"]
-			T.material = EP["Road"]["Sidewalk Material"]
+			T.material = toMaterial(EP["Road"]["Sidewalk Material"])
 		elseif tag == "track" then
-			T.disabled = not EP["Road"]["Rular Road Enabled"]
-			T.color = EP["Road"]["Rular Road Color"]
-			T.material = EP["Road"]["Rular Road Material"]
+			T.disabled = not EP["Road"]["Rural Road Enabled"]
+			T.color = EP["Road"]["Rural Road Color"]
+			T.material = toMaterial(EP["Road"]["Rural Road Material"])
 		else
 			T.disabled = not EP["Road"]["Road Enabled"]
 			T.color = EP["Road"]["Road Color"]
-			T.material = EP["Road"]["Road Material"]
+			T.material = toMaterial(EP["Road"]["Road Material"])
+			T.sidewalkColor = EP["Road"]["Sidewalk Color"]
+			T.sidewalkMaterial = toMaterial(EP["Road"]["Sidewalk Material"])
+			T.sidewalkWidth = EP["Road"]["Sidewalk Width"] or 1.8
+			T.curbHeight = EP["Road"]["Curb Height"] or 0.18
 		end
 
 		WP["highway"][tag] = T
@@ -74,17 +90,17 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 		T.disabled = not EP["Rail"]["Enabled"]
 		T.ballast.color = EP["Rail"]["Ballast Color"]
-		T.ballast.material = EP["Rail"]["Ballast Material"]
+		T.ballast.material = toMaterial(EP["Rail"]["Ballast Material"])
 		T.ballast.height = EP["Rail"]["Ballast Height"]
 		T.ballast.width = EP["Rail"]["Ballast Width"]
 
 		T.rails.color = EP["Rail"]["Rail Color"]
-		T.rails.material = EP["Rail"]["Rail Material"]
+		T.rails.material = toMaterial(EP["Rail"]["Rail Material"])
 
 		T.ties.ties3D = EP["Rail"]["3D Ties"]
 		T.ties.texture = EP["Rail"]["Tie Texture"]
 		T.ties.color = EP["Rail"]["Tie Color"]
-		T.ties.material = EP["Rail"]["Tie Material"]
+		T.ties.material = toMaterial(EP["Rail"]["Tie Material"])
 
 		if EP["Rail"]["Rail Mesh"] == true then
 			T.rails.mesh = "RealisticRail" 
@@ -101,7 +117,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 		T.disabled = not EP["Barrier"]["Enabled"]
 		T.color = EP["Barrier"]["Color"]
-		T.material = EP["Barrier"]["Material"]
+		T.material = toMaterial(EP["Barrier"]["Material"])
 		T.height = EP["Barrier"]["Height"]
 		T.width = EP["Barrier"]["Width"]
 
@@ -193,7 +209,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 			for b = 1,#Map[a] - 1 do
 				
-				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seemless
+				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seamless
 				-- To fix this, I make them a bit bigger, forcing them to blend together with other triangles
 				-- Also add the elevation offset - if someone were to generate mount everest, it will be generated from around the zero Y-level
 				
@@ -302,7 +318,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			return
 		end
 
-		-- Checks if it alredy exists
+		-- Checks if it already exists
 		local addToExistingModel = false
 		local duplicates = CS:GetTagged("OSM_id:"..wayId)
 		for _,duplicate in duplicates do -- duplicate is always just one
@@ -419,7 +435,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		end
 
 		-- OSM_id tag makes sure that everytime we are creating a new object, we can check if it already exists
-		-- If it already exists, we check if it has WorldLoaderInPorgress, if yes, we merge those two objects,
+		-- If it already exists, we check if it has WorldLoaderInProgress, if yes, we merge those two objects,
 		-- if no, the new object gets destroyed
 		CS:AddTag(model,"OSM_id:"..wayId)
 		CS:AddTag(model,"WorldLoaderInProgress")

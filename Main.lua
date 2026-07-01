@@ -29,7 +29,7 @@ local ver = "1.3.3"
 local ChangeHistoryService = game:GetService("ChangeHistoryService")
 local Selection = game:GetService("Selection")
 
-local toolbar = plugin:CreateToolbar("WorldLoader")
+local toolbar = plugin:CreateToolbar("GeoGenerator")
 local toolbarButton = toolbar:CreateButton("Open",ver.." by Klingac","rbxassetid://78133964354631")
 
 -- Plugin UI setup
@@ -44,12 +44,12 @@ local widgetInfo = DockWidgetPluginGuiInfo.new(
 )
 
 local interface = plugin:CreateDockWidgetPluginGui(
-	"WorldLoader",
+	"GeoGenerator",
 	widgetInfo
 )
 
-interface.Title = "WorldLoader "..ver
-interface.Name = "WorldLoader Core"
+interface.Title = "GeoGenerator "..ver
+interface.Name = "GeoGenerator Core"
 
 -- Modules
 local Modules = script.Parent.Modules
