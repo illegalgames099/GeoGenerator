@@ -466,6 +466,24 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		m:RemoveTag("WorldLoaderInProgress")
 	end
 
+	-- ===== Optional: procedurally fill sparse landuse polygons with filler
+	-- buildings using ONLY data already fetched from Overpass -- no external
+	-- script, no file to host. Off by default. =====
+	if GenerationRules["Procedural Infill Enabled"] then
+		local ProceduralInfill = require(script.Parent:WaitForChild("ProceduralInfill"))
+		local infillAdded = ProceduralInfill.generate(
+			data,
+			nodes,
+			ways,
+			GenerationRules,
+			WayProperties,
+			Corefolder,
+			elevationMode,
+			data["elevation"]
+		)
+		print("ProceduralInfill: added "..infillAdded.." filler buildings")
+	end
+
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
 	-- Global ML Building Footprints, pre-clipped/deduped by export_extra_buildings.py).
 	-- Off by default -- set GenerationRules["Extra Buildings URL"] to a hosted
