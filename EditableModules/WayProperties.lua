@@ -155,7 +155,13 @@ local WayPorperties = {
 			heightPerFloor = 3,
 			deafultHeight = 4,
 			color = Color3.new(0.85098, 0.827451, 0.784314),
-			material = Enum.Material.Concrete
+			material = Enum.Material.Concrete,
+			-- Roof defaults (used when a way has no roof:colour/roof:material tag).
+			-- roofColor = nil means "auto-darken the wall colour" -- set a Color3 to override.
+			roofColor = nil,
+			roofMaterial = Enum.Material.Slate,
+			roofThickness = 0.35, -- meters
+			roofHeight = 2.5, -- meters, apex height for pyramidal/hipped roof:shape
 		}
 	},
 	
@@ -176,7 +182,11 @@ local WayPorperties = {
 			heightPerFloor = 3,
 			deafultHeight = 4,
 			color = Color3.new(0.85098, 0.827451, 0.784314),
-			material = Enum.Material.Concrete
+			material = Enum.Material.Concrete,
+			roofColor = nil,
+			roofMaterial = Enum.Material.Slate,
+			roofThickness = 0.35,
+			roofHeight = 2.5,
 		}
 	},
 
