@@ -174,7 +174,7 @@ function module.generate(data: any, nodes: any, ways: any, GenerationRules: any,
 		local tags = way["tags"]
 		if not tags or not tags["landuse"] then
 			continue
-		end
+	
 
 		local profile = LANDUSE_PROFILES[tags["landuse"]]
 		if not profile then
@@ -184,106 +184,323 @@ function module.generate(data: any, nodes: any, ways: any, GenerationRules: any,
 		local ring = wayPositions(way, data, nodes)
 		if not ring then continue end
 
-		local lotSize = profile.lotSize / D -- studs
+		local lotSize = profile.lotSize / D
+			local districtDensity = {
+	residential = 0.75,
+	commercial = 0.55,
+	retail = 0.60,
+	industrial = 0.40
+}
 
-		local minX, maxX, minZ, maxZ = polygonBounds(ring)
+local density =
+	districtDensity[tags.landuse]
+	or 0.5
 
-		local placedInPolygon = 0
+local lotSize =
+	(profile.lotSize / D)
+	*
+	(0.8 + math.random()*0.4)
 
-		local x = minX
-		while x < maxX and placedInPolygon < maxPerPolygon do
+local setback =
+	lotSize *
+	(0.08 + math.random()*0.08)
 
-			local z = minZ
-			while z < maxZ and placedInPolygon < maxPerPolygon do
+local streetDirection =
+	math.random() * math.pi * 2
 
-				-- jitter within the cell so it doesn't look like a perfect grid
-				local jitterX = (math.random() - 0.5) * lotSize * 0.4
-				local jitterZ = (math.random() - 0.5) * lotSize * 0.4
-				local cx = x + lotSize/2 + jitterX
-				local cz = z + lotSize/2 + jitterZ
+local minX, maxX, minZ, maxZ =
+	polygonBounds(ring)
 
-				z += lotSize
+local placedInPolygon = 0
 
-				if not pointInPolygon(cx, cz, ring) then
-					continue
-				end
+local x = minX
 
-				local candidate = Vector3.new(cx, 0, cz)
+while x < maxX
+	and placedInPolygon < maxPerPolygon do
 
-				-- skip if inside/near a real OSM building
-				local blocked = false
-				for _,b in existingBuildings do
-					if (candidate - b.centroid).Magnitude < b.radius + lotSize * 0.5 then
-						blocked = true
-						break
-					end
-				end
-				if blocked then continue end
+	local z = minZ
 
-				-- skip if too close to a building we already placed this polygon/pass
-				for _,p in placedThisPass do
-					if (candidate - p).Magnitude < lotSize * 0.7 then
-						blocked = true
-						break
-					end
-				end
-				if blocked then continue end
+	while z < maxZ
+		and placedInPolygon < maxPerPolygon do
 
-				-- ===== build a simple rectangular footprint for this lot =====
-				local footprintMeters = profile.footprintMin + math.random() * (profile.footprintMax - profile.footprintMin)
-				local halfW = (footprintMeters / D) / 2
-				local halfD = (halfW) * (0.7 + math.random() * 0.6) -- non-square, more house-like
+		z += lotSize
 
-				local positions = {
-					candidate + Vector3.new(-halfW, 0, -halfD),
-					candidate + Vector3.new(halfW, 0, -halfD),
-					candidate + Vector3.new(halfW, 0, halfD),
-					candidate + Vector3.new(-halfW, 0, halfD),
-					candidate + Vector3.new(-halfW, 0, -halfD), -- closing point, matches OSM ring convention
-				}
+		if math.random() > density then
+			continue
+		end
 
-				local levels = math.random(profile.levelsMin, profile.levelsMax)
-				local color = profile.palette[math.random(1, #profile.palette)]
+		if math.random() < 0.07 then
+			continue
+		end
 
-				local syntheticTags = {
-					["building"] = "yes",
-					["building:levels"] = tostring(levels),
-					["building:colour"] = color,
-				}
+		local jitter =
+			lotSize * 0.35
 
-				local model = Instance.new("Model")
-				model.Name = "InfillBuilding"
+		local cx =
+			x
+			+
+			lotSize/2
+			+
+			(math.random()-0.5)
+			*
+			jitter
 
-				local ok, parts = pcall(function()
-					return WayOperations["building"](syntheticTags, model, buildingProperties, positions, {}, GenerationRules, Map, elevationMode)
-				end)
+		local cz =
+			z
+			+
+			lotSize/2
+			+
+			(math.random()-0.5)
+			*
+			jitter
 
-				if ok and parts and #parts > 0 then
-					model.Parent = buildingsFolder
-					CS:AddTag(model, "ProceduralInfill")
+		if not pointInPolygon(
+			cx,
+			cz,
+			ring
+		) then
+			continue
+		end
 
-					table.insert(placedThisPass, candidate)
-					placedInPolygon += 1
-					generatedCount += 1
+		local candidate =
+			Vector3.new(
+				cx,
+				0,
+				cz
+			)
 
-					iter += 1
-					if iter % 15 == 0 then
-						task.wait()
-					end
-				else
-					model:Destroy()
-				end
+		local blocked = false
 
+		for _,b in existingBuildings do
+			if
+				(candidate-b.centroid).Magnitude
+				<
+				b.radius
+				+
+				lotSize
+			then
+				blocked = true
+				break
+			end
+		end
+
+		if blocked then
+			continue
+		end
+
+		for _,p in placedThisPass do
+			if
+				(candidate-p).Magnitude
+				<
+				lotSize
+				*
+				0.85
+			then
+				blocked = true
+				break
+			end
+		end
+
+		if blocked then
+			continue
+		end
+
+		local footprint =
+			profile.footprintMin
+			+
+			math.random()
+			*
+			(
+				profile.footprintMax
+				-
+				profile.footprintMin
+			)
+
+		if
+			tags.landuse
+			==
+			"residential"
+		then
+
+			if math.random() < 0.15 then
+				footprint *= 1.5
 			end
 
-			x += lotSize
+		elseif
+			tags.landuse
+			==
+			"commercial"
+		then
+
+			footprint *=
+				1.2
+				+
+				math.random()
 
 		end
 
+		local width =
+			(footprint/D)/2
+
+		local depth =
+			width
+			*
+			(
+				0.5
+				+
+				math.random()
+			)
+
+		width -= setback
+		depth -= setback
+
+		local angle =
+			streetDirection
+			+
+			math.rad(
+				(math.random()-0.5)
+				*
+				20
+			)
+
+		local cf =
+			CFrame.new(
+				candidate
+			)
+			*
+			CFrame.Angles(
+				0,
+				angle,
+				0
+			)
+
+		local positions = {
+
+			(cf *
+			CFrame.new(
+				-width,
+				0,
+				-depth
+			)).Position,
+
+			(cf *
+			CFrame.new(
+				width,
+				0,
+				-depth
+			)).Position,
+
+			(cf *
+			CFrame.new(
+				width,
+				0,
+				depth
+			)).Position,
+
+			(cf *
+			CFrame.new(
+				-width,
+				0,
+				depth
+			)).Position,
+
+			(cf *
+			CFrame.new(
+				-width,
+				0,
+				-depth
+			)).Position,
+		}
+
+		local levels =
+			math.random(
+				profile.levelsMin,
+				profile.levelsMax
+			)
+
+		if
+			tags.landuse
+			==
+			"commercial"
+			and
+			math.random()
+			<
+			0.15
+		then
+			levels +=
+				math.random(3,8)
+		end
+
+		local color =
+			profile.palette[
+				math.random(
+					1,
+					#profile.palette
+				)
+			]
+
+		local syntheticTags = {
+			building = "yes",
+			["building:levels"] =
+				tostring(levels),
+			["building:colour"] =
+				color,
+		}
+
+		local model =
+			Instance.new("Model")
+
+		model.Name =
+			"InfillBuilding"
+
+		local ok,parts =
+			pcall(function()
+
+				return WayOperations
+					.building(
+						syntheticTags,
+						model,
+						buildingProperties,
+						positions,
+						{},
+						GenerationRules,
+						Map,
+						elevationMode
+					)
+
+			end)
+
+		if ok
+			and parts
+			and #parts > 0
+		then
+
+			model.Parent =
+				buildingsFolder
+
+			CS:AddTag(
+				model,
+				"ProceduralInfill"
+			)
+
+			table.insert(
+				placedThisPass,
+				candidate
+			)
+
+			placedInPolygon += 1
+			generatedCount += 1
+
+			iter += 1
+
+			if iter % 15 == 0 then
+				task.wait()
+			end
+
+		else
+			model:Destroy()
+		end
 	end
 
-	return generatedCount
-
+	x += lotSize
 end
-
-return module
