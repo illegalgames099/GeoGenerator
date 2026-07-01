@@ -2,6 +2,8 @@
 local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangulation"))
 local Bezier = require(script.Parent:WaitForChild("BezierModule"))
+local Triangle = require(script.Parent:WaitForChild("Triangle"))
+local ColorUtils = require(script.Parent:WaitForChild("ColorUtils"))
 
 local RayTriangleIntersection = require(script.Parent:WaitForChild("RayTriangleIntersection"))
 local SimpleOperations = require(script.Parent:WaitForChild("SimpleOperations"))
@@ -346,26 +348,46 @@ local WayOperations = {
 		local scale = Values.Scale.Value
 		local D = 0.28
 		local heightUnderground = 15 * scale --studs
-		
-		local height = tags["building:levels"]
-		
-		-- get height in meters
-		if tags["building:levels"] and tonumber(tags["building:levels"]) then
+
+		-- ===== Wall height: explicit "height" tag (meters) > building:levels*3 > default =====
+		local height
+		if tags["height"] and tonumber(tags["height"]) then
+			height = tonumber(tags["height"]) / D
+		elseif tags["building:levels"] and tonumber(tags["building:levels"]) then
 			height = tonumber(tags["building:levels"]) * 3/D
 		else
 			height = properties.defaultHeight / D
 		end
-		
+
 		-- convert meters to studs according to scale
 		height *= scale
-		
-		local totalHeight = height
-		local addedHeight = height/2
+
+		-- ===== min_height: lets podiums / arcades / stacked building:part volumes
+		-- start above ground instead of every part starting at grade =====
+		local minHeight = 0
+		if tags["min_height"] and tonumber(tags["min_height"]) then
+			minHeight = tonumber(tags["min_height"]) / D
+		elseif tags["building:min_height"] and tonumber(tags["building:min_height"]) then
+			minHeight = tonumber(tags["building:min_height"]) / D
+		elseif tags["building:min_level"] and tonumber(tags["building:min_level"]) then
+			minHeight = tonumber(tags["building:min_level"]) * (properties.heightPerFloor or 3) / D
+		end
+		minHeight *= scale
+
+		-- guard against bad/contradictory OSM data eating the whole building
+		if minHeight >= height then
+			minHeight = 0
+		end
+
+		local wallHeight = height - minHeight
+
+		local totalHeight = wallHeight
+		local addedHeight = minHeight + wallHeight/2
 		
 		-- add more height so building does not clip through the ground
 		if elevationMode ~= "flat" then
-			totalHeight = height + heightUnderground
-			addedHeight = height/2 - heightUnderground /2
+			totalHeight = wallHeight + heightUnderground
+			addedHeight = minHeight + wallHeight/2 - heightUnderground /2
 		end
 		
 		
@@ -383,6 +405,18 @@ local WayOperations = {
 		if not mid then
 			return {}
 		end
+
+		-- ===== Colour/material: OSM tags first, EditableModules defaults as fallback.
+		-- building:colour/material and roof:colour/material are already present in
+		-- every Overpass response this plugin pulls -- they were just unused before. =====
+		local wallColor = ColorUtils.parseColor(tags["building:colour"]) or properties.color
+		local wallMaterial = ColorUtils.parseMaterial(tags["building:material"]) or properties.material
+
+		local roofColor = ColorUtils.parseColor(tags["roof:colour"]) or properties.roofColor or ColorUtils.darken(wallColor, 0.2)
+		local roofMaterial = ColorUtils.parseMaterial(tags["roof:material"]) or properties.roofMaterial or Enum.Material.Slate
+
+		local roofThicknessMeters = properties.roofThickness or 0.35
+		local roofThickness = roofThicknessMeters / D * scale
 		
 		local buildingPositions = {}
 		for i = 1,#positions-1 do
@@ -397,17 +431,90 @@ local WayOperations = {
 		local triangles = PolygonTriangulation(buildingPositions)
 
 		for _,t in triangles do
-			t.Color = properties.color
-			t.Material = properties.material
+			t.Color = wallColor
+			t.Material = wallMaterial
 			t.Size = Vector3.new(totalHeight,t.Size.Y,t.Size.Z)
 			t.Name = "BuildingPart"
 			t:SetAttribute("OSM_type","building_part")
 			t.Parent = model
 		end
 
+		-- ===== Roof =====
+		-- topY is independent of the underground padding added above -- that padding
+		-- only extends the walls downward, the visible top stays at minHeight+wallHeight.
+		local topY = mid.Y + minHeight + wallHeight
+		local roofParts = {}
+		local roofShape = tags["roof:shape"]
+
+		if (roofShape == "pyramidal" or roofShape == "hipped" or roofShape == "dome") and #positions >= 4 then
+
+			-- Simple hip/pyramid approximation: fan-triangulate from an apex above the
+			-- footprint centroid to each footprint edge. Not a true multi-ridge hipped
+			-- roof, but a big step up from a flat cap on anything roughly tower/house-shaped.
+			-- True gabled/skillion ridge geometry is a reasonable next extension here.
+			local roofHeightMeters = tonumber(tags["roof:height"]) or properties.roofHeight or 2.5
+			local apexHeight = roofHeightMeters / D * scale
+
+			local centroid = Vector3.new(0,0,0)
+			local n = #positions-1
+			for i = 1,n do
+				centroid += positions[i]
+			end
+			centroid /= n
+			centroid = Vector3.new(centroid.X, topY, centroid.Z)
+
+			local apex = centroid + Vector3.new(0, apexHeight, 0)
+
+			for i = 1,n do
+				local p1 = Vector3.new(positions[i].X, topY, positions[i].Z)
+				local p2Index = i+1
+				if p2Index > n then p2Index = 1 end
+				local p2 = Vector3.new(positions[p2Index].X, topY, positions[p2Index].Z)
+
+				local wedges = Triangle(model, p1, p2, apex)
+				for _,w in wedges do
+					w.Size = Vector3.new(roofThickness, w.Size.Y, w.Size.Z)
+					w.Color = roofColor
+					w.Material = roofMaterial
+					w.Name = "RoofPart"
+					w:SetAttribute("OSM_type","building_roof")
+					table.insert(roofParts, w)
+				end
+			end
+
+		else
+
+			-- Flat cap -- correct for roof:shape == "flat" or unset, and a safe fallback
+			-- for shapes (gabled, skillion, etc.) we don't model precisely yet.
+			local roofPositions = {}
+			for i = 1,#positions-1 do
+				local pos = positions[i]
+				pos = Vector3.new(pos.X, topY, pos.Z)
+				table.insert(roofPositions, pos)
+			end
+
+			local capTriangles = PolygonTriangulation(roofPositions)
+
+			for _,t in capTriangles do
+				t.Color = roofColor
+				t.Material = roofMaterial
+				t.Size = Vector3.new(roofThickness, t.Size.Y, t.Size.Z)
+				t.Position += Vector3.new(0, t.Size.X/2, 0)
+				t.Name = "RoofPart"
+				t:SetAttribute("OSM_type","building_roof")
+				t.Parent = model
+				table.insert(roofParts, t)
+			end
+
+		end
+
 		model:SetAttribute("OSM_type","building")
 
-		return triangles
+		local allParts = {}
+		table.move(triangles, 1, #triangles, 1, allParts)
+		table.move(roofParts, 1, #roofParts, #allParts+1, allParts)
+
+		return allParts
 
 	end,
 
