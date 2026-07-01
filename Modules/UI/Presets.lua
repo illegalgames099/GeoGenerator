@@ -58,6 +58,8 @@ local Presets = {
 			["Rural Road Enabled"] = true,
 			["Rural Road Color"] = Color3.fromRGB(105, 64, 40),
 			["Rural Road Material"] = "Grass",
+			["Sidewalk Width"] = 1.8,
+			["Curb Height"] = 0.18,
 		}
 	},
 	["Barrier"] = {
@@ -81,6 +83,13 @@ local Presets = {
 			["Safe mode (slower generation)"] = false,
 			["Elevation multiplier"] = 1,
 			["Train platform height multiplier"] = 1,
+			["Realistic Roads"] = true,
+			["Road Lane Markings"] = true,
+			["Lane Marking Length"] = 3,
+			["Lane Marking Gap"] = 6,
+			["Satellite Texture Id"] = "",
+			["Satellite Texture Tile Size"] = 128,
+			["Satellite Texture Transparency"] = 0.15,
 		}
 	}
 }

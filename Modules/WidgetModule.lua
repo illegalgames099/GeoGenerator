@@ -65,7 +65,7 @@ function Widget.loading(widgetText: string)
 	
 	
 	interface.Title = "Loading"
-	interface.Name = "WorldLoader Loading"
+	interface.Name = "GeoGenerator Loading"
 	interface.Enabled = true
 	
 	canvas.Parent = interface
@@ -141,7 +141,7 @@ function Widget.error(widgetText: string)
 
 
 	interface.Title = "Error"
-	interface.Name = "WorldLoader Error"
+	interface.Name = "GeoGenerator Error"
 	interface.Enabled = true
 
 	canvas.Parent = interface
@@ -198,7 +198,7 @@ function Widget.warnToContinue(widgetText: string)
 
 
 	interface.Title = "Error"
-	interface.Name = "WorldLoader Error"
+	interface.Name = "GeoGenerator Error"
 	interface.Enabled = true
 
 	canvas.TextLabel.Text = widgetText

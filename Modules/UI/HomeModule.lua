@@ -359,7 +359,7 @@ function module.start(canvas: CanvasGroup)
 			end)
 
 			if not success then
-				local errorWidget = WidgetModule.error("An unexpected error occured! Screenshot the Output and send the picture here:".."\n https://discord.gg/NA8feHSMut")
+				local errorWidget = WidgetModule.error("An unexpected error occurred! Screenshot the Output and send the picture here:".."\n https://discord.gg/NA8feHSMut")
 				errorWidget.interface.widget.TextLabel.TextXAlignment = Enum.TextXAlignment.Left
 				error(response)
 			end
