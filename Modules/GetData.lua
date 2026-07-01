@@ -9,10 +9,84 @@ local CreatePart = require(script.Parent.CreatePart)
 
 -- Services
 local HS = game:GetService("HttpService")
+local plugin = script:FindFirstAncestorWhichIsA("Plugin")
+
+local CACHE_SETTING_KEY = "GeoGeneratorHttpCacheV1"
+local CACHE_SCHEMA_VERSION = 2
+local MAX_PERSISTED_CACHE_CHARS = 180000
+local MAX_OSM_CHUNK_DEGREES = 0.01
+
+local memoryCache = {}
+local persistentCacheLoaded = false
+local persistentCache = {}
 
 
 local function rN(num: number, numDecimalPlaces: number)
 	return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
+end
+
+local function cacheKey(prefix: string, key: string)
+	return prefix..":"..CACHE_SCHEMA_VERSION..":"..key
+end
+
+local function loadPersistentCache()
+	if persistentCacheLoaded then return end
+	persistentCacheLoaded = true
+	if not plugin then return end
+	local encoded = plugin:GetSetting(CACHE_SETTING_KEY)
+	if type(encoded) ~= "string" or encoded == "" then return end
+	local success, decoded = pcall(function() return HS:JSONDecode(encoded) end)
+	if success and type(decoded) == "table" then persistentCache = decoded end
+end
+
+local function getCachedResponse(key: string)
+	if memoryCache[key] then return memoryCache[key], "memory" end
+	loadPersistentCache()
+	local cached = persistentCache[key]
+	if cached and cached.response then
+		memoryCache[key] = cached.response
+		return cached.response, "settings"
+	end
+	return nil
+end
+
+local function setCachedResponse(key: string, response: string)
+	memoryCache[key] = response
+	if not plugin or #response > MAX_PERSISTED_CACHE_CHARS then return end
+	loadPersistentCache()
+	persistentCache[key] = { response = response, created = os.time() }
+	local success, encoded = pcall(function() return HS:JSONEncode(persistentCache) end)
+	if success and #encoded <= MAX_PERSISTED_CACHE_CHARS then plugin:SetSetting(CACHE_SETTING_KEY, encoded) end
+end
+
+local function splitBBox(south: number, west: number, north: number, east: number, maxDegrees: number)
+	local chunks = {}
+	local latSpan = math.max(0.000001, north - south)
+	local lonSpan = math.max(0.000001, east - west)
+	local latSteps = math.max(1, math.ceil(latSpan / maxDegrees))
+	local lonSteps = math.max(1, math.ceil(lonSpan / maxDegrees))
+	for latIndex = 0, latSteps - 1 do
+		local chunkSouth = south + latSpan * latIndex / latSteps
+		local chunkNorth = south + latSpan * (latIndex + 1) / latSteps
+		for lonIndex = 0, lonSteps - 1 do
+			local chunkWest = west + lonSpan * lonIndex / lonSteps
+			local chunkEast = west + lonSpan * (lonIndex + 1) / lonSteps
+			table.insert(chunks, {
+				coords = tostring(rN(chunkSouth, 5))..","..tostring(rN(chunkWest, 5))..","..tostring(rN(chunkNorth, 5))..","..tostring(rN(chunkEast, 5)),
+			})
+		end
+	end
+	return chunks
+end
+
+local function mergeElements(target: {any}, seen: {[string]: boolean}, elements: {any})
+	for _,element in elements do
+		local key = tostring(element.type)..":"..tostring(element.id)
+		if not seen[key] then
+			seen[key] = true
+			table.insert(target, element)
+		end
+	end
 end
 
 
@@ -72,38 +146,44 @@ end
 
 
 local function getOSM(coords: string)
-	
 	local timeout = 300
-
-	local url = "https://overpass-api.de/api/interpreter?data=[out:json]" ..
-		"[timeout:".. timeout .."];"..
-		"(node("..coords..");way("..coords..");)->.a;out body;>;out skel qt;"..
-		"(rel[!network](bw.a)("..coords.."););out body;"
-
-
+	local key = cacheKey("osm", coords)
+	local cachedResponse = getCachedResponse(key)
 	local startedHttp = os.clock()
+	local response
 
-	-- Make the HTTP GET request
-	local success, response = pcall(function()
-		return HS:GetAsync(url)
-	end)
-	
-	-- Send the unsuccessful response to a sentry dashboard I can monitor
-	if not success then
-		sendToSentry("get osm failed", response)
-		
-		return
+	if cachedResponse then
+		response = cachedResponse
+	else
+		local query = "[out:json][timeout:".. timeout .."];"..
+			"("..
+			"way[building]("..coords..");"..
+			"way[building:part]("..coords..");"..
+			"way[highway]("..coords..");"..
+			"way[railway]("..coords..");"..
+			"way[landuse]("..coords..");"..
+			"way[natural]("..coords..");"..
+			"way[leisure]("..coords..");"..
+			"way[amenity]("..coords..");"..
+			"way[waterway]("..coords..");"..
+			"way[barrier]("..coords..");"..
+			"rel[!network]("..coords..");"..
+			")->.a;(._;>;);out body qt;"
+		local url = "https://overpass-api.de/api/interpreter?data="..HS:UrlEncode(query)
+		local success
+		success, response = pcall(function() return HS:GetAsync(url) end)
+		if not success then
+			sendToSentry("get osm failed", response)
+			return
+		end
+		setCachedResponse(key, response)
 	end
 
-	-- Parse the JSON response
 	local data = HS:JSONDecode(response)
-	
 	local responseSize = rN(string.len(tostring(response))/1000000,3).."MB"
 	local responseTime = os.clock()-startedHttp
-
-	return data["elements"], responseSize, responseTime
+	return data["elements"], responseSize, responseTime, cachedResponse ~= nil
 end
-
 
 local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVector: Vector2, loadingWidget: any, centerLat: number, centerLon: number, worldScale: number)
 	
@@ -151,9 +231,14 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 		
 		while true do
 
-			success, response = pcall(function()
-				return HS:GetAsync(centerUrl)
-			end)
+			local cachedCenter = getCachedResponse(cacheKey("elevation", centerUrl))
+			if cachedCenter then
+				success = true
+				response = cachedCenter
+			else
+				success, response = pcall(function() return HS:GetAsync(centerUrl) end)
+				if success then setCachedResponse(cacheKey("elevation", centerUrl), response) end
+			end
 			
 			attempts += 1
 
@@ -294,9 +379,14 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 			while true do
 
 				-- Make the HTTP GET request
-				success, response = pcall(function()
-					return HS:GetAsync(url)
-				end)
+				local cachedElevation = getCachedResponse(cacheKey("elevation", url))
+				if cachedElevation then
+					success = true
+					response = cachedElevation
+				else
+					success, response = pcall(function() return HS:GetAsync(url) end)
+					if success then setCachedResponse(cacheKey("elevation", url), response) end
+				end
 
 				if success then
 					usedChains += 1
@@ -422,27 +512,38 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 		local corner1 = corners1[i]
 		local corner2 = corners2[i]
 		
-		local coords = tostring(rN(corner2.X,3))..","..tostring(rN(corner1.Y,3))..","..tostring(rN(corner1.X,3))..","..tostring(rN(corner2.Y,3))
-		
-		local elements, SresponseSize, SresponseTime = getOSM(coords)
-		if elements then
-			totalStreetResponseTime += SresponseTime
+		local south = math.min(corner1.X, corner2.X)
+		local north = math.max(corner1.X, corner2.X)
+		local west = math.min(corner1.Y, corner2.Y)
+		local east = math.max(corner1.Y, corner2.Y)
+		local chunks = splitBBox(south, west, north, east, MAX_OSM_CHUNK_DEGREES)
+		local elements = {}
+		local seenElements = {}
+
+		for chunkIndex, chunk in chunks do
+			loadingWidget:ChangeText("Downloading street data...\nChunk "..chunkIndex.."/"..#chunks)
+			local chunkElements, SresponseSize, SresponseTime = getOSM(chunk.coords)
+			if chunkElements then
+				totalStreetResponseTime += SresponseTime
+				mergeElements(elements, seenElements, chunkElements)
+			end
+
+			if not chunkElements then
+				loadingWidget:Kill()
+				local streetDataFailedMessage = "Failed to get street data, this could mean:\n"
+					.. "• No internet connection\n"
+					.. "• Area you are trying to generate is too large\n"
+					.. "• You have downloaded a lot of data and are being rate limited, try again in a few minutes"
+				WidgetModule.error(streetDataFailedMessage)
+				return
+			end
+
+			task.wait()
 		end
 
-		if not elements then
-			loadingWidget:Kill()	
-			local streetDataFailedMessage = "Failed to get street data, this could mean:\n"
-				.. "• No internet connection\n"
-				.. "• Area you are trying to generate is too large\n"
-				.. "• You have downloaded a lot of data and are being rate limited, try again in a few minutes"			
-			WidgetModule.error(streetDataFailedMessage)
-			return
-		end
-		
 		datas[i] = {
 			elements = elements
 		}
-		
 	end
 	
 	-- Elevation data
