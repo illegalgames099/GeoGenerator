@@ -66,7 +66,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		elseif tag == "track" then
 			T.disabled = not EP["Road"]["Rural Road Enabled"]
 			T.color = EP["Road"]["Rural Road Color"]
-			T.material = toMaterial(EP["Road"]["Rural Road Material"])
+
 		else
 			T.disabled = not EP["Road"]["Road Enabled"]
 			T.color = EP["Road"]["Road Color"]
