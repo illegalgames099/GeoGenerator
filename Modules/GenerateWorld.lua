@@ -1,4 +1,4 @@
--- Responsible for managin generation of all parts
+-- Responsible for managing generation of all parts
 
 -- Modules
 local Coordinates = require(script.Parent:WaitForChild("Coordinates"))
@@ -32,7 +32,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	-- Here i just manually connect editedProperties to WayProperties
 	-- Yeah there are probably better ways to do this
 
-	-- Guildings
+	-- Buildings
 	for _,tag in {"building","building:part"} do
 		local T = WP[tag]["nil"]
 		T.disabled = not EP["Building"]["Enabled"]
@@ -52,9 +52,9 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			T.color = EP["Road"]["Sidewalk Color"]
 			T.material = EP["Road"]["Sidewalk Material"]
 		elseif tag == "track" then
-			T.disabled = not EP["Road"]["Rular Road Enabled"]
-			T.color = EP["Road"]["Rular Road Color"]
-			T.material = EP["Road"]["Rular Road Material"]
+			T.disabled = not EP["Road"]["Rural Road Enabled"]
+			T.color = EP["Road"]["Rural Road Color"]
+			T.material = EP["Road"]["Rural Road Material"]
 		else
 			T.disabled = not EP["Road"]["Road Enabled"]
 			T.color = EP["Road"]["Road Color"]
@@ -193,7 +193,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 			for b = 1,#Map[a] - 1 do
 				
-				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seemless
+				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seamless
 				-- To fix this, I make them a bit bigger, forcing them to blend together with other triangles
 				-- Also add the elevation offset - if someone were to generate mount everest, it will be generated from around the zero Y-level
 				
@@ -302,7 +302,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			return
 		end
 
-		-- Checks if it alredy exists
+		-- Checks if it already exists
 		local addToExistingModel = false
 		local duplicates = CS:GetTagged("OSM_id:"..wayId)
 		for _,duplicate in duplicates do -- duplicate is always just one
@@ -419,7 +419,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		end
 
 		-- OSM_id tag makes sure that everytime we are creating a new object, we can check if it already exists
-		-- If it already exists, we check if it has WorldLoaderInPorgress, if yes, we merge those two objects,
+		-- If it already exists, we check if it has WorldLoaderInProgress, if yes, we merge those two objects,
 		-- if no, the new object gets destroyed
 		CS:AddTag(model,"OSM_id:"..wayId)
 		CS:AddTag(model,"WorldLoaderInProgress")

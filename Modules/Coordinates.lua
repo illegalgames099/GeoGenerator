@@ -19,10 +19,12 @@ local Coordinates = {}
 --------------------------------------------------
 
 local EARTH_RADIUS = 6378137         -- meters
-local WORLD_SCALE = 0.1             -- studs per meter
+local STUDS_PER_METER = 3.57
+local WORLD_SCALE = STUDS_PER_METER -- studs per meter; updated by newScaler for compatibility
 
 local originLatitude = 0
 local originLongitude = 0
+local originLatitudeRad = 0
 
 --------------------------------------------------
 -- ORIGIN
@@ -31,6 +33,7 @@ local originLongitude = 0
 function Coordinates.setOrigin(latitude, longitude)
     originLatitude = latitude
     originLongitude = longitude
+    originLatitudeRad = math.rad(latitude)
 end
 
 function Coordinates.getOrigin()
@@ -283,8 +286,16 @@ end
 -- COMPATIBILITY
 --------------------------------------------------
 
-function Coordinates.newScaler()
+function Coordinates.newScaler(scaleFactor, latitude)
+    scaleFactor = tonumber(scaleFactor) or 1
+    WORLD_SCALE = STUDS_PER_METER * scaleFactor
 
+    if latitude then
+        originLatitude = latitude
+        originLatitudeRad = math.rad(latitude)
+    else
+        originLatitudeRad = math.rad(originLatitude)
+    end
 end
 
 function Coordinates.scale(value)
@@ -293,6 +304,37 @@ end
 
 function Coordinates.unscale(value)
     return value / WORLD_SCALE
+end
+
+function Coordinates.toRoblox(latitude, longitude)
+    Coordinates.setOrigin(latitude, longitude)
+    return Vector2.new(
+        math.rad(longitude) * EARTH_RADIUS * math.cos(originLatitudeRad) * WORLD_SCALE,
+        math.rad(latitude) * EARTH_RADIUS * WORLD_SCALE
+    )
+end
+
+function Coordinates.toRobloxOffset(latitude, longitude, xOffset, yOffset)
+    local world = Vector2.new(
+        math.rad(longitude) * EARTH_RADIUS * math.cos(originLatitudeRad) * WORLD_SCALE,
+        math.rad(latitude) * EARTH_RADIUS * WORLD_SCALE
+    )
+
+    return Vector2.new(
+        world.X - (xOffset or 0),
+        world.Y - (yOffset or 0)
+    )
+end
+
+function Coordinates.toLatLon(x, y)
+    if WORLD_SCALE == 0 then
+        return originLatitude, originLongitude
+    end
+
+    local latitude = math.deg((y / WORLD_SCALE) / EARTH_RADIUS)
+    local longitude = math.deg((x / WORLD_SCALE) / (EARTH_RADIUS * math.cos(originLatitudeRad)))
+
+    return latitude, longitude
 end
 
 --------------------------------------------------

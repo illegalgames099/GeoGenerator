@@ -24,7 +24,7 @@ local SENTRY_PROJECT = "4510438593790032"
 -- Sentry is used to log errors on an online dashboard
 local function sendToSentry(message: string, extra: any)
 	
-	warn("An error occured while using WorldLoader, it has been sent to the developers to investigate.")
+	warn("An error occurred while using GeoGenerator, it has been sent to the developers to investigate.")
 	
 	local payload = {
 		message = message,
