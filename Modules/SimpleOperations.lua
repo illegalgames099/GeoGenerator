@@ -22,6 +22,87 @@ local maxX
 local minZ
 local maxZ
 
+local function isEnabled(value: any, default: boolean?)
+	if value == nil then
+		return default == true
+	end
+
+	return value == true
+end
+
+local function addTopTexture(part: BasePart, textureId: string?, studsPerTile: number?, transparency: number?)
+	if not textureId or textureId == "" then
+		return
+	end
+
+	if tonumber(textureId) then
+		textureId = "rbxassetid://"..textureId
+	end
+
+	local texture = Instance.new("Texture")
+	texture.Name = "SatelliteTexture"
+	texture.Texture = textureId
+	texture.Face = Enum.NormalId.Top
+	texture.StudsPerTileU = studsPerTile or 64
+	texture.StudsPerTileV = studsPerTile or 64
+	texture.Transparency = transparency or 0
+	texture.Parent = part
+end
+
+local function shouldUseRoadDetails(tags: any, properties: any, GenerationRules: any)
+	if not isEnabled(GenerationRules["Realistic Roads"], true) then
+		return false
+	end
+
+	if not tags or tags["area"] == "yes" then
+		return false
+	end
+
+	local highway = tags["highway"]
+	if highway == "footway" or highway == "path" or highway == "cycleway" or highway == "pedestrian" or highway == "steps" or highway == "track" then
+		return false
+	end
+
+	return properties and (properties.material == Enum.Material.Asphalt or properties.material == "Asphalt")
+end
+
+local function createDashedLaneMarkings(model: Instance, cfrm: CFrame, dist: number, roadWidth: number, roadHeight: number, laneCount: number, GenerationRules: any)
+	if not isEnabled(GenerationRules["Road Lane Markings"], true) or dist < 6 then
+		return {}
+	end
+
+	local markings = {}
+	local dashLength = GenerationRules["Lane Marking Length"] or 3
+	local gapLength = GenerationRules["Lane Marking Gap"] or 6
+	local stripeWidth = math.max(0.05, roadWidth * 0.025)
+	local yOffset = roadHeight / 2 + 0.015
+	local laneSpacing = roadWidth / laneCount
+
+	for lane = 1, laneCount - 1 do
+		local xOffset = -roadWidth / 2 + laneSpacing * lane
+		local z = -dist / 2 + dashLength / 2
+
+		while z < dist / 2 do
+			local currentLength = math.min(dashLength, dist / 2 - z + dashLength / 2)
+			if currentLength > 0.5 then
+				local marking = CreatePart(
+					model,
+					cfrm * CFrame.new(xOffset, yOffset, z),
+					Vector3.new(stripeWidth, 0.025, currentLength),
+					Color3.fromRGB(245, 245, 220),
+					Enum.Material.SmoothPlastic
+				)
+				marking.Name = "Lane Marking"
+				table.insert(markings, marking)
+			end
+
+			z += dashLength + gapLength
+		end
+	end
+
+	return markings
+end
+
 -- For all mentions of the value of 'D' variable below:
 -- Its a divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs 
 
@@ -237,6 +318,7 @@ function module.area(tags: any, model: Instance, properties: any, positions: {Ve
 		t.Material = properties.material
 		t.Size = Vector3.new(height,t.Size.Y,t.Size.Z)
 		t.Position += Vector3.new(0,t.Size.X/2,0)
+		addTopTexture(t, GenerationRules["Satellite Texture Id"], GenerationRules["Satellite Texture Tile Size"], GenerationRules["Satellite Texture Transparency"])
 		t.Parent = model
 	end
 
@@ -257,11 +339,12 @@ function module.way(tags: any,model: Instance, properties: any, positions: {Vect
 
 	local M = 1 --multiplier
 
-	if tags["lanes"] then
-		if tags["lanes"] == 1 then
-			M = 1.2 -- One lane roads look very weird when their so thin so i added an extra 0.25
+	local taggedLaneCount = tonumber(tags["lanes"])
+	if taggedLaneCount then
+		if taggedLaneCount == 1 then
+			M = 1.2 -- One lane roads look very thin, so add a little extra width
 		else
-			M *= tags["lanes"] /1.8 -- Divided by 2 cuz most roads untagged roas in the world already have 2 lanes
+			M *= taggedLaneCount / 1.8 -- most untagged roads already represent roughly two lanes
 		end
 	end
 	
@@ -318,6 +401,12 @@ function module.way(tags: any,model: Instance, properties: any, positions: {Vect
 	end
 	
 
+	local sidewalkLeftParts = {}
+	local sidewalkRightParts = {}
+	local useRoadDetails = shouldUseRoadDetails(tags, properties, GenerationRules)
+	local sidewalkWidth = (GenerationRules["Sidewalk Width"] or properties.sidewalkWidth or 1.8) / D
+	local curbHeight = (GenerationRules["Curb Height"] or properties.curbHeight or 0.18) / D
+
 	for i,pos1 in positions do
 		local pos2 = positions[i-1]
 		if not pos2 then
@@ -325,20 +414,55 @@ function module.way(tags: any,model: Instance, properties: any, positions: {Vect
 		end
 
 		local dist = (pos1-pos2).Magnitude
-		local size = Vector3.new(properties.width/D*M,properties.height/D,dist)
+		local roadWidth = properties.width/D*M
+		local roadHeight = properties.height/D
+		local size = Vector3.new(roadWidth,roadHeight,dist)
 		local cfrm = CFrame.new((pos1+pos2)/2) * CFrame.lookAt(pos1,pos2).Rotation
 
-		cfrm += Vector3.new(0,properties.height/D/2,0)
+		cfrm += Vector3.new(0,roadHeight/2,0)
+
+		if useRoadDetails and (tags["sidewalk"] ~= "no" and tags["sidewalk:both"] ~= "no") then
+			local sidewalkHeight = roadHeight + curbHeight
+			local sidewalkSize = Vector3.new(sidewalkWidth, sidewalkHeight, dist)
+			local sidewalkColor = properties.sidewalkColor or Color3.fromRGB(126, 126, 126)
+			local sidewalkMaterial = properties.sidewalkMaterial or Enum.Material.Concrete
+			local sideOffset = roadWidth / 2 + sidewalkWidth / 2
+
+			if tags["sidewalk"] ~= "right" and tags["sidewalk:left"] ~= "no" then
+				local left = CreatePart(model,cfrm * CFrame.new(-sideOffset, curbHeight / 2, 0),sidewalkSize,sidewalkColor,sidewalkMaterial)
+				left.Name = "Sidewalk"
+				table.insert(sidewalkLeftParts,left)
+			end
+
+			if tags["sidewalk"] ~= "left" and tags["sidewalk:right"] ~= "no" then
+				local right = CreatePart(model,cfrm * CFrame.new(sideOffset, curbHeight / 2, 0),sidewalkSize,sidewalkColor,sidewalkMaterial)
+				right.Name = "Sidewalk"
+				table.insert(sidewalkRightParts,right)
+			end
+		end
 
 		local part = CreatePart(model,cfrm,size,properties.color,properties.material)
+		part.Name = "Road Surface"
+		addTopTexture(part, GenerationRules["Satellite Texture Id"], GenerationRules["Satellite Texture Tile Size"], GenerationRules["Satellite Texture Transparency"])
 		table.insert(parts,part)
+
+		if useRoadDetails then
+			local laneCount = math.max(1, taggedLaneCount or 2)
+			createDashedLaneMarkings(model, cfrm, dist, roadWidth, roadHeight, laneCount, GenerationRules)
+		end
 
 	end
 
-	-- Makes it so the way parts ale nicely connected (like with archimedes plugin) and not clipping
+	-- Makes it so the way parts are nicely connected (like with archimedes plugin) and not clipping
 	if elevationMode == "flat" then
 		if #parts > 1 then
 			module.smoothConnectFlat(parts)
+		end
+		if #sidewalkLeftParts > 1 then
+			module.smoothConnectFlat(sidewalkLeftParts)
+		end
+		if #sidewalkRightParts > 1 then
+			module.smoothConnectFlat(sidewalkRightParts)
 		end
 	end
 

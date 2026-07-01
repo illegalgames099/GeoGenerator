@@ -18,6 +18,18 @@ local function rN(num: number, numDecimalPlaces: number)
 	return tonumber(string.format("%." .. (numDecimalPlaces or 0) .. "f", num))
 end
 
+local function toMaterial(material: any)
+	if typeof(material) == "EnumItem" then
+		return material
+	end
+
+	if type(material) == "string" and Enum.Material[material] then
+		return Enum.Material[material]
+	end
+
+	return material
+end
+
 
 local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3, basePos: Vector3, elevationMode: string, worldScale: number)
 
@@ -39,7 +51,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		T.heightPerFloor = EP["Building"]["Height per floor"]
 		T.defaultHeight = EP["Building"]["Default Height"]
 		T.color = EP["Building"]["Color"]
-		T.material = EP["Building"]["Material"]
+		T.material = toMaterial(EP["Building"]["Material"])
 
 		WP[tag]["nil"] = T
 	end
@@ -50,15 +62,19 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		if tag == "path" or tag == "pedestrian" or tag == "footway" then
 			T.disabled = not EP["Road"]["Sidewalk Enabled"]
 			T.color = EP["Road"]["Sidewalk Color"]
-			T.material = EP["Road"]["Sidewalk Material"]
+			T.material = toMaterial(EP["Road"]["Sidewalk Material"])
 		elseif tag == "track" then
 			T.disabled = not EP["Road"]["Rural Road Enabled"]
 			T.color = EP["Road"]["Rural Road Color"]
-			T.material = EP["Road"]["Rural Road Material"]
+
 		else
 			T.disabled = not EP["Road"]["Road Enabled"]
 			T.color = EP["Road"]["Road Color"]
-			T.material = EP["Road"]["Road Material"]
+			T.material = toMaterial(EP["Road"]["Road Material"])
+			T.sidewalkColor = EP["Road"]["Sidewalk Color"]
+			T.sidewalkMaterial = toMaterial(EP["Road"]["Sidewalk Material"])
+			T.sidewalkWidth = EP["Road"]["Sidewalk Width"] or 1.8
+			T.curbHeight = EP["Road"]["Curb Height"] or 0.18
 		end
 
 		WP["highway"][tag] = T
@@ -74,17 +90,17 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 		T.disabled = not EP["Rail"]["Enabled"]
 		T.ballast.color = EP["Rail"]["Ballast Color"]
-		T.ballast.material = EP["Rail"]["Ballast Material"]
+		T.ballast.material = toMaterial(EP["Rail"]["Ballast Material"])
 		T.ballast.height = EP["Rail"]["Ballast Height"]
 		T.ballast.width = EP["Rail"]["Ballast Width"]
 
 		T.rails.color = EP["Rail"]["Rail Color"]
-		T.rails.material = EP["Rail"]["Rail Material"]
+		T.rails.material = toMaterial(EP["Rail"]["Rail Material"])
 
 		T.ties.ties3D = EP["Rail"]["3D Ties"]
 		T.ties.texture = EP["Rail"]["Tie Texture"]
 		T.ties.color = EP["Rail"]["Tie Color"]
-		T.ties.material = EP["Rail"]["Tie Material"]
+		T.ties.material = toMaterial(EP["Rail"]["Tie Material"])
 
 		if EP["Rail"]["Rail Mesh"] == true then
 			T.rails.mesh = "RealisticRail" 
@@ -101,7 +117,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 		T.disabled = not EP["Barrier"]["Enabled"]
 		T.color = EP["Barrier"]["Color"]
-		T.material = EP["Barrier"]["Material"]
+		T.material = toMaterial(EP["Barrier"]["Material"])
 		T.height = EP["Barrier"]["Height"]
 		T.width = EP["Barrier"]["Width"]
 
