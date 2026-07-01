@@ -465,7 +465,25 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	for _,m in CS:GetTagged("WorldLoaderInProgress") do
 		m:RemoveTag("WorldLoaderInProgress")
 	end
-	
+
+	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
+	-- Global ML Building Footprints, pre-clipped/deduped by export_extra_buildings.py).
+	-- Off by default -- set GenerationRules["Extra Buildings URL"] to a hosted
+	-- GeoJSON URL to enable. See GetExtraBuildings.lua for details. =====
+	if GenerationRules["Extra Buildings URL"] and GenerationRules["Extra Buildings URL"] ~= "" then
+		local GetExtraBuildings = require(script.Parent:WaitForChild("GetExtraBuildings"))
+		local added = GetExtraBuildings.generate(
+			GenerationRules["Extra Buildings URL"],
+			offsetVector,
+			data["elevation"],
+			elevationMode,
+			GenerationRules,
+			WayProperties,
+			Corefolder,
+			GenerationRules["Extra Buildings Dedupe Radius"]
+		)
+		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
+	end
 
 	return true
 
