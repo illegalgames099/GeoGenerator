@@ -97,38 +97,34 @@ local SENTRY_PROJECT = "4510438593790032"
 
 -- Sentry is used to log errors on an online dashboard
 local function sendToSentry(message: string, extra: any)
-	
+
 	warn("An error occurred while using GeoGenerator, it has been sent to the developers to investigate.")
-	
+
 	local payload = {
 		message = message,
 		extra = extra
 	}
-	
+
 	local json = HS:JSONEncode(payload)
-	
+
 	local url = ("https://%s/api/%s/store/?sentry_key=%s"):format(
 		SENTRY_HOST,
 		SENTRY_PROJECT,
 		SENTRY_KEY
 	)
-	
+
 	local success, response = pcall(function()
 		HS:PostAsync(url, json, Enum.HttpContentType.ApplicationJson)
 	end)
-	
+
 	if not success then
 		print(response)
 	end
-	
+
 end
 
 
-local function getV3(result: any, offsetVector: Vector2, worldScale: number)
-	
-	local height = result["elevation"]
-	local lat = result["location"]["lat"]
-	local lon = result["location"]["lng"]
+local function getV3(lat: number, lon: number, height: number, offsetVector: Vector2, worldScale: number)
 
 	if not height then
 		height = 0
@@ -141,7 +137,7 @@ local function getV3(result: any, offsetVector: Vector2, worldScale: number)
 	local v3 = Vector3.new(v2.X,height,v2.Y)
 
 	return v3
-	
+
 end
 
 
@@ -186,49 +182,49 @@ local function getOSM(coords: string)
 end
 
 local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVector: Vector2, loadingWidget: any, centerLat: number, centerLon: number, worldScale: number)
-	
+
 	if not workspace:FindFirstChild("World") then
 		local world = Instance.new("Folder",workspace)
 		world.Name = "World"
 	end
-	
-	
+
+
 	local startedHttp = os.clock()
 	local totalJSONsize = 0
 	local totalLocations = 0
-	
+
 	local totalChains = 0
 	local usedChains = 0
 
 	local elevation = {}
 
 	local resolution = 0.0003
-	
+
 	-- The terrain api has a limit of 100 locations per request
 	local limitPerUrl = 100
-	
-	-- The terrain api has a limit of 1 request per second
-	local waitInterval = 1.1
-	
+
+	-- The terrain api has a limit of 1 request per second (open-meteo is much faster)
+	local waitInterval = 0.05
+
 	local rad_lat = math.rad(corners1[1].X)
 
 	-- Calculate the scale factor using the Mercator projection formula
 	-- further from the equator we get, the more stretched out cooridnates become, so we need to correct it
 	local scale_factor = 1 / math.cos(rad_lat)
-	
+
 	local resLat = resolution
 	local resLon = resolution * scale_factor
 
 	-- Get a point in the middle of one of the parts that serves as an offset for all elevations
-	local url = "https://api.opentopodata.org/v1/aster30m?locations="
-	local centerUrl = url .. tostring(centerLat) .. "," .. tostring(centerLon)
-	
+	local url = "https://api.open-meteo.com/v1/elevation?"
+	local centerUrl = url .. "latitude=" .. tostring(centerLat) .. "&longitude=" .. tostring(centerLon)
+
 	local success, response
-	
+
 	do
-		
+
 		local attempts = 0
-		
+
 		while true do
 
 			local cachedCenter = getCachedResponse(cacheKey("elevation", centerUrl))
@@ -239,7 +235,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 				success, response = pcall(function() return HS:GetAsync(centerUrl) end)
 				if success then setCachedResponse(cacheKey("elevation", centerUrl), response) end
 			end
-			
+
 			attempts += 1
 
 			if success then
@@ -247,7 +243,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 			else
 				warn(response)
 			end
-			
+
 			if attempts > 10 then
 				sendToSentry("get terrain midpoint failed, too many attempts", response)
 			end
@@ -255,17 +251,17 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 			task.wait(waitInterval)
 
 		end
-		
+
 	end
-	
-	
-	
+
+
+
 	local centerResponseT = HS:JSONDecode(response)
-	local centerV3 = getV3(centerResponseT["results"][1], offsetVector, worldScale)
+	local centerV3 = getV3(centerLat, centerLon, centerResponseT["elevation"][1], offsetVector, worldScale)
 	local elevationOffset = -centerV3.Y
-	
+
 	Elevation.setElevationOffset(elevationOffset+300)
-	
+
 	local neededData: {
 		{
 			longitudes: {number},
@@ -274,37 +270,37 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 			latitudeChains: {string},
 		}
 	} = {}
-	
+
 	local Maps = {}
 
 	for i = 1, #corners1 do
-		
-		neededData[i] = { 
+
+		neededData[i] = {
 			longitudes = {},
 			latitudes = {},
 			longitudeChains = {},
 			latitudeChains = {}
 		}
-		
+
 		local limit = 0
 		local cur = 0
-		
+
 		local corner1 = corners1[i]
 		local corner2 = corners2[i]
-		
+
 		local diffX = corner1.X - corner2.X
 		local diffY = corner2.Y - corner1.Y
-		
+
 		local nStepsX = math.max(1, math.floor(diffX / resLat + 0.5))
 		local stepX = diffX / nStepsX
 		local nStepsY = math.max(1, math.floor(diffY / resLon + 0.5))
 		local stepY = diffY / nStepsY
-		
+
 		for j = 0, nStepsX do
 			for k = 0, nStepsY do
 				local lat = corner2.X + stepX * j
 				local lon = corner1.Y + stepY * k
-				
+
 				table.insert(neededData[i].latitudes,lat)
 				table.insert(neededData[i].longitudes,lon)
 				totalLocations += 1
@@ -315,17 +311,17 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 		totalChains += 1
 		for j,lat in neededData[i].latitudes do
 			if (j - 1) % limitPerUrl == 0 and j ~= 1 then
-				
+
 				limit += 1
 				totalChains += 1
-				
+
 				table.insert(neededData[i].latitudeChains,t)
 				t = {}
-				
+
 			end
 			table.insert(t,lat)
 		end
-		
+
 		table.insert(neededData[i].latitudeChains,t)
 
 		local t = {}
@@ -336,41 +332,32 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 			end
 			table.insert(t,lon)
 		end
-		
+
 		table.insert(neededData[i].longitudeChains,t)
 
 	end
-	
-	
+
+
 	local balls = {}
-	
+
 	for i = 1, #corners1 do
-		
+
 		local Legend = {}
 		local Map = {}
-		
+
 		for j = 1, #neededData[i].latitudeChains do
-			
+
 			local latitudes = neededData[i].latitudeChains[j]
 			local longitudes = neededData[i].longitudeChains[j]
-			
+
 			-- Need to define the url every loop iteration so the old locations get recycled
-			local url = "https://api.opentopodata.org/v1/aster30m?locations="
+			local url = "https://api.open-meteo.com/v1/elevation?"
 
 			local n = #latitudes
-			for k = 1,n do
-			
-				local lon = longitudes[k]
-				local lat = latitudes[k]
+			local latsStr = table.concat(latitudes, ",")
+			local lonsStr = table.concat(longitudes, ",")
 
-				url = url .. lat .. "," .. lon
-
-				if k ~= n then
-					url = url .. "|"
-				end
-			end
-
-			url = url .. "&interpolation=cubic"
+			url = url .. "latitude=" .. latsStr .. "&longitude=" .. lonsStr
 
 
 			local success, response
@@ -390,7 +377,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 				if success then
 					usedChains += 1
-					
+
 					local secondsLeft = totalChains - usedChains * 1.1
 					local timeLeft
 					if secondsLeft > 59 then
@@ -408,13 +395,13 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 					break
 				else
 					failures += 1
-					
+
 					if failures > 30 then
 						WidgetModule.error("Elevation data failed, try again later")
-						
+
 						-- Send the unsuccessful response to a sentry dashboard I can monitor
 						sendToSentry("get terrain failed, too many failures", response)
-						
+
 						return
 					end
 				end
@@ -422,7 +409,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 				task.wait(waitInterval)
 
 			end
-			
+
 
 			if success then
 
@@ -430,20 +417,21 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 				response = HS:JSONDecode(response)
 
-				for _,result in response["results"] do
-					local height = result["elevation"]
-					local lat = result["location"]["lat"]
-					local lon = result["location"]["lng"]
+				if response["elevation"] then
+					for k = 1, #latitudes do
+						local height = response["elevation"][k]
+						local lat = latitudes[k]
+						local lon = longitudes[k]
 
-					if not height then
-						height = 0
-					end
+						if not height then
+							height = 0
+						end
 
-					-- Convert meters to studs
-					height = height * 3.57 * worldScale
+						-- Convert meters to studs
+						height = height * 3.57 * worldScale
 
-					local v2 = Coordinates.toRobloxOffset(lat, lon, offsetVector.X, offsetVector.Y)
-					local v3 = Vector3.new(v2.X,height,v2.Y)
+						local v2 = Coordinates.toRobloxOffset(lat, lon, offsetVector.X, offsetVector.Y)
+						local v3 = Vector3.new(v2.X,height,v2.Y)
 
 
 					if not Legend[tostring(lat)] then
@@ -460,9 +448,9 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 					-- Visualization for debuging purposes
 					local visualize = false
-					
+
 					if visualize then
-						
+
 						local part = Instance.new("Part")
 						part.Shape = "Ball"
 						part.Size = Vector3.new(20,20,20)
@@ -472,46 +460,47 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 						part.Parent = workspace.World
 
 						table.insert(balls,part)
-						
+
 					end
 
+					end
 				end
 			end
-			
+
 		end
-		
+
 		table.insert(Maps, Map)
-		
+
 	end
-	
+
 	for _,part: Part in balls do
 		part:Destroy()
 	end
-	
+
 	local responseSize = rN(totalJSONsize/1000000,3).."MB"
 	local responseTime = os.clock()-startedHttp
-	
+
 
 	return Maps, responseTime
 end
 
 
 local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: Vector2, elevationMode: string, centerLat: number, centerLon: number, worldScale: number)
-	
+
 	--sendToSentry("sentry test", {sup="ayo"})
-	
+
 	-- Initializing the loading widget
 	local loadingWidget = WidgetModule.loading("Downloading street data...")
 	local datas = {}
-	
+
 	local totalElevationResponseTime = 0
 	local totalStreetResponseTime = 0
-	
+
 	for i = 1, #corners1 do
-		
+
 		local corner1 = corners1[i]
 		local corner2 = corners2[i]
-		
+
 		local south = math.min(corner1.X, corner2.X)
 		local north = math.max(corner1.X, corner2.X)
 		local west = math.min(corner1.Y, corner2.Y)
@@ -545,7 +534,7 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 			elements = elements
 		}
 	end
-	
+
 	-- Elevation data
 	loadingWidget:ChangeText("Street data loaded successfully! \n Downloading elevation data...")
 
@@ -567,20 +556,20 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 		end
 
 	end
-	
+
 	if elevationMode == "flat" then
 		loadingWidget:FinishLoading("Data loaded successfully! \n  Street Data: "..rN(totalStreetResponseTime,3).."s")
 	else
 		loadingWidget:FinishLoading("Data loaded successfully! \n  Street Data: "..rN(totalStreetResponseTime,3).."s \n Elevation Data: "..rN(totalElevationResponseTime,3).."s")
 	end
-	
+
 
 	for _,data in datas do
 		if data.elevation then
 			Elevation.addMapToAllMaps(data.elevation)
 		end
 	end
-	
+
 	return datas
 end
 
@@ -588,21 +577,20 @@ return getData
 
 
 --[[
-	
+
 	--CURRENT overpass turbo prompt, KEEP IT HERE
-	
+
 	[out:json][timeout:25];
 	(node({{bbox}});
 	way({{bbox}});
 	)->.a;
 	out body;>;out skel qt;
 	(rel[!network](bw.a)({{bbox}}););out body;
-	
-	
+
+
 	--Old urls:
-	
+
 	local url = "https://overpass-api.de/api/interpreter?data=[out:json];(node("..coords..");way("..coords.."););out body;"
 	local url = "https://overpass-api.de/api/interpreter?data=[out:json];(way("..coords.."););out body;"
 
 ]]
-
