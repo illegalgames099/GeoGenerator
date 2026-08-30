@@ -7,14 +7,14 @@
 --		      |\      _,,,---,,_
 --		ZZZzz /,`.-'`'    -.  ;-;;,_
 --		     |,4-  ) )-,_. ,\ (  `'-'
---			'---''(_/--'  `-'\_)  
+--			'---''(_/--'  `-'\_)
 
 
 -- If you are looking for editing visuals of generated parts, look into WayProperties in EditableModules Folder
 
 -- Api Data provides (all free of charge):
 --	https://www.openstreetmap.org/copyright
---	https://api.opentopodata.org
+--	https://open-meteo.com/en/docs/elevation-api
 
 -- Libraries / Atributions:
 --	ColorPicker by Brambus230605: https://devforum.roblox.com/t/2772473
@@ -78,8 +78,7 @@ game:GetService("RunService").RenderStepped:Connect(function()
 		local mouseWidgetPosition = interface:GetRelativeMousePosition()
 		local viewportSize = workspace.CurrentCamera.ViewportSize
 		local newMousePosition = mouseWidgetPosition
-		
+
 		mousePosVal.Value = Vector3.new(newMousePosition.X,newMousePosition.Y,0)
 	end
 end)
-
