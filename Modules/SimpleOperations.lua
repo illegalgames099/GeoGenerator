@@ -7,7 +7,6 @@ local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangul
 local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 local Bezier = require(script.Parent:WaitForChild("BezierModule"))
 local Elevation = require(script.Parent:WaitForChild("Elevation"))
-local Triangle = require(script.Parent:WaitForChild("Triangle"))
 
 -- Other
 local ignoreBoundary
