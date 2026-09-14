@@ -9,7 +9,7 @@ local plugin = script:FindFirstAncestorWhichIsA("Plugin")
 
 local HS = game:GetService("HttpService")
 
--- Divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs 
+-- Divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs
 local D = 0.28
 
 local ItemTypes = {
@@ -40,7 +40,7 @@ function module.start(canvas: CanvasGroup)
 	local colorPicker = ColorPickerModule.new()
 
 	local propertyFrames = {properties.Building,properties.Rail,properties.Road,properties.Barrier,properties["Generation Rules"]}
-	
+
 
 	local function setCheckbox(button: Instance ,value: boolean)
 		local box = button.Box
@@ -69,7 +69,7 @@ function module.start(canvas: CanvasGroup)
 	local function updateViewport(frame: Frame)
 
 		local viewport = frame:FindFirstChild("ViewportFrame")
-		
+
 		if not viewport then
 			return
 		end
@@ -93,7 +93,7 @@ function module.start(canvas: CanvasGroup)
 
 		elseif frame.Name == "Road" then
 
-			local m = viewport.Model 
+			local m = viewport.Model
 
 			m.Road.Color = T["Road Color"]
 			m.Road.Material = T["Road Material"]
@@ -109,7 +109,7 @@ function module.start(canvas: CanvasGroup)
 
 		elseif frame.Name == "Rail" then
 
-			local m = viewport.Model 
+			local m = viewport.Model
 
 			local ballast = m.Ballast
 			local dist = ballast.Size.Z
@@ -218,7 +218,7 @@ function module.start(canvas: CanvasGroup)
 		for _,button in buttonFrame:GetChildren() do
 			if not button:IsA("TextButton") then
 				continue
-			end 
+			end
 
 
 			local action = button:GetAttribute("Action")
@@ -241,11 +241,11 @@ function module.start(canvas: CanvasGroup)
 
 
 	local function loadPresetMenu(frame: Frame,T)
-		
+
 		if not frame:FindFirstChild("PresetFrame") then
 			return
 		end
-		
+
 		for _,preset in T do
 			local button = Instance.new("TextButton")
 			button.Text = preset["Preset Name"]
@@ -267,7 +267,7 @@ function module.start(canvas: CanvasGroup)
 			button.MouseButton1Up:Connect(function()
 				loadPreset(frame,preset)
 			end)
-			
+
 			button.Parent = frame.PresetFrame
 		end
 	end
@@ -295,7 +295,23 @@ function module.start(canvas: CanvasGroup)
 			itembox.BackgroundColor3 = Color3.new(0.937255, 0.937255, 0.937255)
 		end
 
+		local s = math.min(buttonPx*#array,canvas.AbsoluteSize.Y-130)
+
+		itembox.Size = UDim2.new(0.8,0,0,s)
+		itembox.CanvasSize = UDim2.new(0,0,0,buttonPx*#array)
+		itembox.Position = UDim2.new(0.5,0,0.5,0)
+		itembox.Visible = true
+		itembox.ZIndex = 30
+		itembox.Parent = canvas
+
+		blurFrame.MouseButton1Up:Connect(function()
+			blurFrame:Destroy()
+			itembox:Destroy()
+		end)
+
 		for i,element in array do
+			if i % 25 == 0 then task.wait() end
+			if not itembox.Parent then break end
 			local b = Instance.new("TextButton")
 			b.Size = UDim2.new(1,0,0,buttonPx)
 			b.BackgroundTransparency = 1
@@ -333,34 +349,20 @@ function module.start(canvas: CanvasGroup)
 
 		end
 
-		local s = math.min(buttonPx*#array,canvas.AbsoluteSize.Y-130)
-
-		itembox.Size = UDim2.new(0.8,0,0,s)
-		itembox.CanvasSize = UDim2.new(0,0,0,buttonPx*#array)
-		itembox.Position = UDim2.new(0.5,0,0.5,0)
-		itembox.Visible = true
-		itembox.ZIndex = 30
-		itembox.Parent = canvas
-
-		blurFrame.MouseButton1Up:Connect(function()
-			blurFrame:Destroy()
-			itembox:Destroy()
-		end)
-
 	end
-	
+
 
 	for _,frame in propertyFrames do
 
 		local buttonFrame = frame.ButtonFrame
 		local labelFrame = frame.LabelFrame
 		local viewport = frame:FindFirstChild("ViewportFrame")
-		
+
 		loadPresetMenu(frame,Presets[frame.Name])
 		loadPreset(frame,Presets[frame.Name][1])
 
 		if viewport then
-			
+
 			viewport.Button.MouseButton1Up:Connect(function()
 
 				local newport = viewport:Clone()
@@ -390,7 +392,7 @@ function module.start(canvas: CanvasGroup)
 		for _,button in buttonFrame:GetChildren() do
 			if not button:IsA("TextButton") then
 				continue
-			end 
+			end
 
 			local action = button:GetAttribute("Action")
 
@@ -457,7 +459,7 @@ function module.start(canvas: CanvasGroup)
 
 		end
 
-		
+
 		updateViewport(frame)
 
 	end
@@ -523,7 +525,7 @@ function module.start(canvas: CanvasGroup)
 		local date = os.date()
 
 		local T = {name, date, editedActions}
-		
+
 
 		local index = findInSaves(T)
 
@@ -575,7 +577,23 @@ function module.start(canvas: CanvasGroup)
 			itembox.BackgroundColor3 = Color3.new(0.937255, 0.937255, 0.937255)
 		end
 
+		local s = math.min(buttonPx*#array,canvas.AbsoluteSize.Y-130)
+
+		itembox.Size = UDim2.new(0.8,0,0,s)
+		itembox.CanvasSize = UDim2.new(0,0,0,buttonPx*#array)
+		itembox.Position = UDim2.new(0.5,0,0.5,0)
+		itembox.Visible = true
+		itembox.ZIndex = 30
+		itembox.Parent = canvas
+
+		blurFrame.MouseButton1Up:Connect(function()
+			blurFrame:Destroy()
+			itembox:Destroy()
+		end)
+
 		for i,element in array do
+			if i % 25 == 0 then task.wait() end
+			if not itembox.Parent then break end
 			local b = Instance.new("TextButton")
 			b.Size = UDim2.new(1,0,0,buttonPx)
 			b.BackgroundTransparency = 1
@@ -611,7 +629,7 @@ function module.start(canvas: CanvasGroup)
 				end
 
 				for _,frame in propertyFrames do
-					
+
 					--older saves dont include generation rules
 					if not actions[frame.Name] and frame.Name == "Generation Rules" then
 						actions[frame.Name] = Presets[frame.Name][1]
@@ -628,20 +646,6 @@ function module.start(canvas: CanvasGroup)
 			end)
 
 		end
-
-		local s = math.min(buttonPx*#array,canvas.AbsoluteSize.Y-130)
-
-		itembox.Size = UDim2.new(0.8,0,0,s)
-		itembox.CanvasSize = UDim2.new(0,0,0,buttonPx*#array)
-		itembox.Position = UDim2.new(0.5,0,0.5,0)
-		itembox.Visible = true
-		itembox.ZIndex = 30
-		itembox.Parent = canvas
-
-		blurFrame.MouseButton1Up:Connect(function()
-			blurFrame:Destroy()
-			itembox:Destroy()
-		end)
 
 	end)
 
