@@ -150,3 +150,11 @@ module.pointInTri = pointInTri
 
 return module
 
+
+return setmetatable({
+	pointInTri = pointInTri,
+}, {
+	__call = function(_, ...)
+		return TriangulateMain(...)
+	end,
+})
