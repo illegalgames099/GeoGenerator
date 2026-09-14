@@ -36,10 +36,10 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	-- First we need to get GenerationRules and WayProperties
 	local GenerationRules = UIProperties.getGenerationRules()
 	local WayProperties
-	
+
 	local WP_module = script.Parent.Parent.EditableModules:GetChildren()[1]
 	local WP = require(WP_module)
-	
+
 	local EP = UIProperties.getProperties()
 	-- Here i just manually connect editedProperties to WayProperties
 	-- Yeah there are probably better ways to do this
@@ -103,7 +103,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		T.ties.material = toMaterial(EP["Rail"]["Tie Material"])
 
 		if EP["Rail"]["Rail Mesh"] == true then
-			T.rails.mesh = "RealisticRail" 
+			T.rails.mesh = "RealisticRail"
 		else
 			T.rails.mesh = "Rail"
 		end
@@ -154,8 +154,8 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		end
 	end
 	findParentProperty(WayProperties)
-	
-	
+
+
 	local xOff = offsetVector.X
 	local yOff = offsetVector.Y
 
@@ -192,7 +192,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		end
 
 	end
-	
+
 
 	local Map = data["elevation"]
 	local terrain = game.Workspace.Terrain
@@ -208,11 +208,11 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			task.wait()
 
 			for b = 1,#Map[a] - 1 do
-				
+
 				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seamless
 				-- To fix this, I make them a bit bigger, forcing them to blend together with other triangles
 				-- Also add the elevation offset - if someone were to generate mount everest, it will be generated from around the zero Y-level
-				
+
 				local v1 = (Map[a][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(worldScale,0,-worldScale)
 				local v2 = (Map[a+1][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(worldScale,0,worldScale)
 				local v3 = (Map[a][b+1]["v3"]  + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(-worldScale,0,-worldScale)
@@ -238,7 +238,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 					end
 				end
 
-			end 
+			end
 		end
 	end
 
@@ -256,18 +256,16 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		while true do
 			local keyFound
 
-			for key,T in tableOfProperties do
-
-				if tags[key] then
-
+			for key, value in pairs(tags) do
+				local T = tableOfProperties[key]
+				if T then
 					keyFound = true
-
-					if T[tags[key]] then
-						if T[tags[key]].operation then
-							properties = T[tags[key]]
-							name = tags[key]
+					if T[value] then
+						if T[value].operation then
+							properties = T[value]
+							name = value
 						else
-							tableOfProperties = T[tags[key]]
+							tableOfProperties = T[value]
 						end
 					else
 						if T["nil"] then
@@ -277,13 +275,8 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 							return
 						end
 					end
-
-				end
-
-				if properties then
 					break
 				end
-
 			end
 
 			if not keyFound then
@@ -338,7 +331,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			local j = nodes[nodeId]
 
 			if not j then
-				continue 
+				continue
 			end
 
 			local v2 = data["elements"][j]["v2"]
@@ -348,7 +341,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 
 		local tags = way["tags"]
-		
+
 		-- WayOperations (with SimpleOperations) do all of the work of creating the visuals
 		local parts = WayOperations[properties.operation](tags,model,properties,positions,corners,GenerationRules,data["elevation"],elevationMode)
 
@@ -358,12 +351,12 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 				for _,part in parts do
 					if part:IsA("BasePart") and properties.operation == "way" then
-						
+
 						-- Sometimes fails because of invalid cframe or size
 						pcall(function()
 							terrain:FillBlock(part.CFrame,part.Size + Vector3.new(0,4,0),Enum.Material.Asphalt)
 						end)
-						
+
 					end
 				end
 
@@ -392,43 +385,43 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			model:Destroy()
 			return
 		end
-		
+
 		if addToExistingModel then --merge this model with model of same OSM way id ("OSM_id:"..number tag)
-			
+
 			local newParts = model:GetChildren()
 			local originalParts = duplicates[1]:GetChildren()
 			for _,newPart: Part in newParts do
-				
+
 				local partFound = false
-				
+
 				for _,originalPart: Part in originalParts do
-					
+
 					if newPart.CFrame:FuzzyEq(originalPart.CFrame, 0.01) then
 						partFound = true
 						break
 					end
-					
+
 				end
-				
+
 				if partFound then
 					newPart:Destroy()
 				else
 					newPart.Parent = duplicates[1]
 				end
 			end
-			
+
 			model:Destroy()
 			return true
-			
+
 		else
 			if properties.parent then
 				model.Parent = Corefolder[properties.parent]
 			end
-			
+
 			if not model.Parent then
 				model.Parent = Corefolder.Invalid
 			end
-			
+
 			if tags and tags["name"] then
 				model.Name = tags.name
 			end
@@ -441,10 +434,10 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		CS:AddTag(model,"WorldLoaderInProgress")
 
 		return true
-		
+
 	end
-	
-	
+
+
 	local corners = {
 		basePos + Vector3.new(baseSize.X/2,0,baseSize.Z/2),
 		basePos + Vector3.new(baseSize.X/2,0,-baseSize.Z/2),
@@ -469,7 +462,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 		if notSkipped then
 			iter += 1
-			
+
 			-- If safe mode then give then wait more often
 			if iter % 10 == 0 or (GenerationRules["Safe mode"] and iter % 3 == 0) then
 				task.wait()
@@ -477,7 +470,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 		end
 
 	end
-	
+
 	for _,m in CS:GetTagged("WorldLoaderInProgress") do
 		m:RemoveTag("WorldLoaderInProgress")
 	end
