@@ -4,7 +4,6 @@
 local Coordinates = require(script.Parent:WaitForChild("Coordinates"))
 local WayOperations = require(script.Parent:WaitForChild("WayOperations"))
 local SimpleOperations = require(script.Parent:WaitForChild("SimpleOperations"))
-local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 local WidgetModule = require(script.Parent:WaitForChild("WidgetModule"))
 local UIProperties = require(script.Parent:WaitForChild("UI").PropertiesModule)
 local Triangle = require(script.Parent:WaitForChild("Triangle"))
