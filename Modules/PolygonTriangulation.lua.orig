@@ -144,10 +144,4 @@ local function TriangulateMain(positions: {Vector3})
 
 end
 
-return setmetatable({
-	isPolyCCW = isPolyCCW,
-}, {
-	__call = function(_, ...)
-		return TriangulateMain(...)
-	end
-})
+return TriangulateMain
