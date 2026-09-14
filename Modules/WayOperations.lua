@@ -1,11 +1,9 @@
 -- Modules
 local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangulation"))
-local Bezier = require(script.Parent:WaitForChild("BezierModule"))
 local Triangle = require(script.Parent:WaitForChild("Triangle"))
 local ColorUtils = require(script.Parent:WaitForChild("ColorUtils"))
 
-local RayTriangleIntersection = require(script.Parent:WaitForChild("RayTriangleIntersection"))
 local SimpleOperations = require(script.Parent:WaitForChild("SimpleOperations"))
 local Elevation = require(script.Parent:WaitForChild("Elevation"))
 
