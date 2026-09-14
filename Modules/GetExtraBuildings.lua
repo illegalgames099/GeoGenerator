@@ -94,6 +94,41 @@ function module.generate(url: string, offsetVector: Vector2, Map: any, elevation
 
 	dedupeRadius = dedupeRadius or 6
 
+	local scheme, auth_and_path = string.match(url, "^(https?)://(.*)")
+	if not scheme or not auth_and_path then
+		warn("GetExtraBuildings: invalid URL scheme for '"..tostring(url).."'")
+		return 0
+	end
+
+	local authority = string.match(auth_and_path, "^([^/?#]+)")
+	if not authority then
+		warn("GetExtraBuildings: invalid URL authority for '"..tostring(url).."'")
+		return 0
+	end
+
+	local host = string.match(authority, "@([^@]+)$") or authority
+	host = string.match(host, "^([^:]+)") or host
+	host = string.lower(host)
+
+	if host == "localhost" or host == "127.0.0.1" or host == "0.0.0.0" then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	end
+
+	if string.match(host, "^192%.168%.%d+%.%d+$") or string.match(host, "^10%.%d+%.%d+%.%d+$") or string.match(host, "^169%.254%.%d+%.%d+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	end
+
+	local octet1, octet2 = string.match(host, "^(%d+)%.(%d+)%.%d+%.%d+$")
+	if octet1 == "172" then
+		local num = tonumber(octet2)
+		if num and num >= 16 and num <= 31 then
+			warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+			return 0
+		end
+	end
+
 	local success, response = pcall(function()
 		return HS:GetAsync(url)
 	end)
