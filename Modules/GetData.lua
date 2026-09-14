@@ -5,7 +5,6 @@ local WidgetModule = require(script.Parent.WidgetModule)
 local Coordinates = require(script.Parent.Coordinates)
 local Triangle = require(script.Parent.Triangle)
 local Elevation = require(script.Parent.Elevation)
-local CreatePart = require(script.Parent.CreatePart)
 
 -- Services
 local HS = game:GetService("HttpService")
