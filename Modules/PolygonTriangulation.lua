@@ -144,5 +144,9 @@ local function TriangulateMain(positions: {Vector3})
 
 end
 
-return TriangulateMain
+local module = {}
+setmetatable(module, {__call = function(self, ...) return TriangulateMain(...) end})
+module.pointInTri = pointInTri
+
+return module
 
