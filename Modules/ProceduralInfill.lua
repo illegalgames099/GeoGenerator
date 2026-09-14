@@ -20,7 +20,7 @@ local module = {}
 local Objects = script.Parent.Parent.Objects
 local Values = Objects.Values
 
-local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangulation"))
+
 local WayOperations = require(script.Parent:WaitForChild("WayOperations"))
 
 local CS = game:GetService("CollectionService")

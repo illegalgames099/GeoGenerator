@@ -113,17 +113,17 @@ function Coordinates.distance(
     lon2
 )
 
-    local φ1 = math.rad(lat1)
-    local φ2 = math.rad(lat2)
+    local phi1 = math.rad(lat1)
+    local phi2 = math.rad(lat2)
 
-    local Δφ = math.rad(lat2 - lat1)
-    local Δλ = math.rad(lon2 - lon1)
+    local deltaPhi = math.rad(lat2 - lat1)
+    local deltaLambda = math.rad(lon2 - lon1)
 
     local a =
-        math.sin(Δφ/2)^2 +
-        math.cos(φ1) *
-        math.cos(φ2) *
-        math.sin(Δλ/2)^2
+        math.sin(deltaPhi/2)^2 +
+        math.cos(phi1) *
+        math.cos(phi2) *
+        math.sin(deltaLambda/2)^2
 
     local c =
         2 *
@@ -146,23 +146,23 @@ function Coordinates.bearing(
     lon2
 )
 
-    local φ1 = math.rad(lat1)
-    local φ2 = math.rad(lat2)
+    local phi1 = math.rad(lat1)
+    local phi2 = math.rad(lat2)
 
-    local λ1 = math.rad(lon1)
-    local λ2 = math.rad(lon2)
+    local lambda1 = math.rad(lon1)
+    local lambda2 = math.rad(lon2)
 
     local y =
-        math.sin(λ2 - λ1) *
-        math.cos(φ2)
+        math.sin(lambda2 - lambda1) *
+        math.cos(phi2)
 
     local x =
-        math.cos(φ1) *
-        math.sin(φ2)
+        math.cos(phi1) *
+        math.sin(phi2)
         -
-        math.sin(φ1) *
-        math.cos(φ2) *
-        math.cos(λ2 - λ1)
+        math.sin(phi1) *
+        math.cos(phi2) *
+        math.cos(lambda2 - lambda1)
 
     return math.deg(math.atan2(y, x))
 end
@@ -222,44 +222,44 @@ function Coordinates.offset(
     distance
 )
 
-    local δ = distance / EARTH_RADIUS
-    local θ = math.rad(bearing)
+    local delta = distance / EARTH_RADIUS
+    local theta = math.rad(bearing)
 
-    local φ1 = math.rad(latitude)
-    local λ1 = math.rad(longitude)
+    local phi1 = math.rad(latitude)
+    local lambda1 = math.rad(longitude)
 
-    local φ2 =
+    local phi2 =
         math.asin(
-            math.sin(φ1)
+            math.sin(phi1)
             *
-            math.cos(δ)
+            math.cos(delta)
             +
-            math.cos(φ1)
+            math.cos(phi1)
             *
-            math.sin(δ)
+            math.sin(delta)
             *
-            math.cos(θ)
+            math.cos(theta)
         )
 
-    local λ2 =
-        λ1
+    local lambda2 =
+        lambda1
         +
         math.atan2(
-            math.sin(θ)
+            math.sin(theta)
             *
-            math.sin(δ)
+            math.sin(delta)
             *
-            math.cos(φ1),
-            math.cos(δ)
+            math.cos(phi1),
+            math.cos(delta)
             -
-            math.sin(φ1)
+            math.sin(phi1)
             *
-            math.sin(φ2)
+            math.sin(phi2)
         )
 
     return
-        math.deg(φ2),
-        math.deg(λ2)
+        math.deg(phi2),
+        math.deg(lambda2)
 end
 
 --------------------------------------------------
