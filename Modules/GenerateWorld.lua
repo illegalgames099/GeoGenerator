@@ -487,7 +487,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	-- script, no file to host. Off by default. =====
 	if GenerationRules["Procedural Infill Enabled"] then
 		local ProceduralInfill = require(script.Parent:WaitForChild("ProceduralInfill"))
-		local infillAdded = ProceduralInfill.generate(
+		ProceduralInfill.generate(
 			data,
 			nodes,
 			ways,
@@ -497,7 +497,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
+
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -506,7 +506,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 	-- GeoJSON URL to enable. See GetExtraBuildings.lua for details. =====
 	if GenerationRules["Extra Buildings URL"] and GenerationRules["Extra Buildings URL"] ~= "" then
 		local GetExtraBuildings = require(script.Parent:WaitForChild("GetExtraBuildings"))
-		local added = GetExtraBuildings.generate(
+		GetExtraBuildings.generate(
 			GenerationRules["Extra Buildings URL"],
 			offsetVector,
 			data["elevation"],
@@ -516,7 +516,7 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
+
 	end
 
 	return true
