@@ -5,7 +5,6 @@ local WidgetModule = require(script.Parent.WidgetModule)
 local Coordinates = require(script.Parent.Coordinates)
 local Triangle = require(script.Parent.Triangle)
 local Elevation = require(script.Parent.Elevation)
-local CreatePart = require(script.Parent.CreatePart)
 
 -- Services
 local HS = game:GetService("HttpService")
@@ -224,6 +223,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 	do
 
 		local attempts = 0
+		local currentWait = waitInterval
 
 		while true do
 
@@ -242,13 +242,15 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 				break
 			else
 				warn(response)
+				currentWait = math.min(currentWait * 2, 5) -- Exponential backoff, up to 5 seconds
 			end
 
 			if attempts > 10 then
 				sendToSentry("get terrain midpoint failed, too many attempts", response)
+				return nil -- Abort if too many attempts to prevent infinite loop or overwhelming the API
 			end
 
-			task.wait(waitInterval)
+			task.wait(currentWait)
 
 		end
 
@@ -362,6 +364,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 			local success, response
 			local failures = 0
+			local currentWait = waitInterval
 
 			while true do
 
@@ -396,7 +399,7 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 				else
 					failures += 1
 
-					if failures > 30 then
+					if failures > 10 then
 						WidgetModule.error("Elevation data failed, try again later")
 
 						-- Send the unsuccessful response to a sentry dashboard I can monitor
@@ -404,9 +407,10 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 						return
 					end
+					currentWait = math.min(currentWait * 2, 5) -- Exponential backoff, up to 5 seconds
 				end
 
-				task.wait(waitInterval)
+				task.wait(currentWait)
 
 			end
 
