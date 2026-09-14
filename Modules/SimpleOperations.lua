@@ -113,6 +113,30 @@ local function findMesh(p: Instance)
 		end
 	end
 end
+local function adjustPartScaleAndCFrame(p: Instance, j: number, dist: number)
+	local oldDist = p.Size.Z/2
+	local diff = dist-oldDist
+
+	local m = -1 if j == 2 then m = 1 end
+
+	local offset = diff/2*m
+
+	local mesh = findMesh(p)
+
+	if mesh then
+		if mesh:IsA("BlockMesh") then
+			mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,1)
+		else
+			mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,dist+oldDist)
+		end
+		p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
+	else
+		p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
+	end
+
+	p.CFrame = p.CFrame * CFrame.new(0,0,offset)
+end
+
 
 function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 	
@@ -131,49 +155,21 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 
 		local angle = Bezier.CFramesAngle(part.CFrame,prevPart.CFrame)
 
-		if angle < 90.2 or 179.8 < angle then
+		if angle > 179.8 then
+			continue
+		end
 
-			if 179.6 < angle then
-				continue
-			else
+		if angle < 90.2 then
 
-				-- We need to scale the part to the intersect and not further (i think, this is me 2 weeks later)
+			-- We need to scale the part to the intersect and not further (i think, this is me 2 weeks later)
 
-				local intersect = Bezier.CFrameCFrameIntersect3D(part.CFrame,prevPart.CFrame)
+			local intersect = Bezier.CFrameCFrameIntersect3D(part.CFrame,prevPart.CFrame)
 
-				if not intersect then continue end
+			if not intersect then continue end
 
-				for j,p in {part,prevPart} do
-
-					local dist = (p.Position-intersect).Magnitude
-					local oldDist = p.Size.Z/2
-					local diff = dist-oldDist
-
-					local m = -1 if j == 2 then m = 1 end
-
-					local offset = diff/2*m
-
-					-- If the part has a mesh, we need to properly scale it
-					local mesh = findMesh(p)
-
-					if mesh then
-						local scaleRatio = mesh.Scale.Z/p.Size.Z
-						if mesh:IsA("BlockMesh") then
-							mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,1)
-						else
-							mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,dist+oldDist)
-						end
-
-						p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
-
-					else
-						p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
-					end
-
-					p.CFrame = p.CFrame * CFrame.new(0,0,offset)
-
-				end
-
+			for j,p in {part,prevPart} do
+				local dist = (p.Position-intersect).Magnitude
+				adjustPartScaleAndCFrame(p, j, dist)
 			end
 
 			continue
@@ -218,31 +214,8 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 			end
 
 			local dist = (closerPos-furtherIntersect).Magnitude
-			local oldDist = p.Size.Z/2
-			local diff = dist-oldDist
+			adjustPartScaleAndCFrame(p, j, dist)
 
-			local m = -1 if j == 2 then m = 1 end
-
-			local offset = diff/2*m
-
-			-- Again, we need to scale the mesh properly (if found)
-			local mesh = findMesh(p)
-
-			if mesh then
-
-				if mesh:IsA("BlockMesh") then
-					mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,1)
-				else
-					mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y,dist+oldDist)
-				end
-
-				p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
-
-			else
-				p.Size = Vector3.new(p.Size.X,p.Size.Y,dist+oldDist)
-			end
-
-			p.CFrame = p.CFrame * CFrame.new(0,0,offset)
 
 		end
 
