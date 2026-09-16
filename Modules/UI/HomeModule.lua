@@ -394,8 +394,15 @@ function module.start(canvas: CanvasGroup)
 		local height = 60
 
 
+		local iter = 1
+
 		for i = #History,1,-1 do
 			local T = History[i]
+			if iter % 15 == 0 then
+				task.wait()
+			end
+			iter += 1
+
 
 			local b = Instance.new("TextButton")
 			b.Size = UDim2.new(1,0,0,height)

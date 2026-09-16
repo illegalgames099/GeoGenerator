@@ -20,7 +20,7 @@ local module = {}
 local Objects = script.Parent.Parent.Objects
 local Values = Objects.Values
 
-local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangulation"))
+
 local WayOperations = require(script.Parent:WaitForChild("WayOperations"))
 
 local CS = game:GetService("CollectionService")
@@ -174,7 +174,7 @@ function module.generate(data: any, nodes: any, ways: any, GenerationRules: any,
 		local tags = way["tags"]
 		if not tags or not tags["landuse"] then
 			continue
-	
+		end
 
 		local profile = LANDUSE_PROFILES[tags["landuse"]]
 		if not profile then
@@ -504,3 +504,9 @@ while x < maxX
 
 	x += lotSize
 end
+	end
+
+	return generatedCount
+end
+
+return module

@@ -22,7 +22,7 @@ local function createPart(parent: Instance,cframe: CFrame|Vector3,size: Vector3?
 	part.CanCollide = false
 	part.Anchored = true
 
-	if size == Vector3.new(.1,.2,.1) then
+	if size == Vector3.new(.1, .2, .1) then
 		part.Name = "Debug"
 	end
 	
