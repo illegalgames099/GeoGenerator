@@ -4,9 +4,14 @@ local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 -- I did not come up with the basic logic of creation of a triangle from 3 points,
 -- i just made the triangle split into multiple when being bigger than 'max' value,
 -- sadly, i cannot find where i got the code from
+--
+-- Note: the size.X of generated wedges is explicitly set to 0. This relies on the Roblox engine
+-- rendering wedges with a width of 0 as 2-dimensional 3D planes without causing a crash or
+-- visual bug. This effectively eliminates visible seams/cracks between terrain triangles
+-- without needing to use geometry overlap hacks.
 
 local function triangle(parent: Instance,a: Vector3,b: Vector3,c: Vector3)
-	
+
 	local max = 2048
 
 	local ab, ac, bc = b - a, c - a, c - b
@@ -29,8 +34,8 @@ local function triangle(parent: Instance,a: Vector3,b: Vector3,c: Vector3)
 
 
 	local sizes = {
-		Vector3.new(.05, height, math.abs(ab:Dot(back))),
-		Vector3.new(.05, height, math.abs(ac:Dot(back)))
+		Vector3.new(0, height, math.abs(ab:Dot(back))),
+		Vector3.new(0, height, math.abs(ac:Dot(back)))
 	}
 
 	local cframes = {
