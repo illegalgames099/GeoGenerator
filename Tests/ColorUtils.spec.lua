@@ -13,6 +13,30 @@ local function assert_approx_eq(expected, actual, tolerance)
     end
 end
 
+print("--- Testing ColorUtils.parseColor fallback/empty handling ---")
+
+-- Test 1: Nil input
+local p1 = ColorUtils.parseColor(nil)
+assert(p1 == nil, "Expected nil when parsing nil")
+print("Test 1 (Nil input) passed")
+
+-- Test 2: Empty string
+local p2 = ColorUtils.parseColor("")
+assert(p2 == nil, "Expected nil when parsing empty string")
+print("Test 2 (Empty string) passed")
+
+-- Test 3: Semicolon only
+local p3 = ColorUtils.parseColor(";")
+assert(p3 == nil, "Expected nil when parsing semicolon only")
+print("Test 3 (Semicolon only) passed")
+
+-- Test 4: Invalid color name
+local p4 = ColorUtils.parseColor("unknown_color")
+assert(p4 == nil, "Expected nil when parsing invalid color name")
+print("Test 4 (Invalid color name) passed")
+
+print("All tests passed for ColorUtils.parseColor fallback/empty handling!")
+
 print("--- Testing ColorUtils.darken ---")
 
 -- Test 1: Standard darkening with specific amount
