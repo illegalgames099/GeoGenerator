@@ -61,3 +61,45 @@ assert_approx_eq(0, d6.B)
 print("Test 5 (Darkening black) passed")
 
 print("All tests passed for ColorUtils.darken!")
+
+local function assert_eq(expected, actual)
+    if expected ~= actual then
+        error(string.format("Assertion failed: expected %s, got %s", tostring(expected), tostring(actual)))
+    end
+end
+
+print("\n--- Testing ColorUtils.parseMaterial ---")
+
+-- Test 1: Valid material tags
+assert_eq(Enum.Material.Brick, ColorUtils.parseMaterial("brick"))
+assert_eq(Enum.Material.Concrete, ColorUtils.parseMaterial("concrete"))
+assert_eq(Enum.Material.Wood, ColorUtils.parseMaterial("wood"))
+print("Test 1 (Valid material tags) passed")
+
+-- Test 2: Invalid material / garbage strings
+assert_eq(nil, ColorUtils.parseMaterial("garbage"))
+assert_eq(nil, ColorUtils.parseMaterial("12345"))
+assert_eq(nil, ColorUtils.parseMaterial("not_a_real_material"))
+assert_eq(nil, ColorUtils.parseMaterial("random string with spaces"))
+assert_eq(nil, ColorUtils.parseMaterial("!@#$%^&*()"))
+print("Test 2 (Invalid material tags) passed")
+
+-- Test 3: Nil, empty strings, and whitespace
+assert_eq(nil, ColorUtils.parseMaterial(nil))
+assert_eq(nil, ColorUtils.parseMaterial(""))
+assert_eq(nil, ColorUtils.parseMaterial("   "))
+print("Test 3 (Nil and empty strings) passed")
+
+-- Test 4: Semicolon-separated values (should take the first valid or invalid)
+assert_eq(Enum.Material.Brick, ColorUtils.parseMaterial("brick;concrete"))
+assert_eq(Enum.Material.Concrete, ColorUtils.parseMaterial("concrete;wood"))
+assert_eq(nil, ColorUtils.parseMaterial("garbage;brick"))
+print("Test 4 (Semicolon-separated values) passed")
+
+-- Test 5: Whitespace trimming and case insensitivity
+assert_eq(Enum.Material.Brick, ColorUtils.parseMaterial("  BRICK  "))
+assert_eq(Enum.Material.WoodPlanks, ColorUtils.parseMaterial("Timber_Framing"))
+assert_eq(Enum.Material.Glass, ColorUtils.parseMaterial("gLAsS"))
+print("Test 5 (Whitespace trimming and case insensitivity) passed")
+
+print("All tests passed for ColorUtils.parseMaterial!")
