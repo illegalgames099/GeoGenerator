@@ -88,13 +88,17 @@ local function mergeElements(target: {any}, seen: {[string]: boolean}, elements:
 end
 
 
-local SENTRY_DNS = "https://eb659e634e4f9d39207eab0dace42488@o4510438574653440.ingest.de.sentry.io/4510438593790032"
-local SENTRY_KEY = "eb659e634e4f9d39207eab0dace42488"
-local SENTRY_HOST = "o4510438574653440.ingest.de.sentry.io"
-local SENTRY_PROJECT = "4510438593790032"
+local SENTRY_DNS = plugin and plugin:GetSetting("SENTRY_DNS") or ""
+local SENTRY_KEY = plugin and plugin:GetSetting("SENTRY_KEY") or ""
+local SENTRY_HOST = plugin and plugin:GetSetting("SENTRY_HOST") or ""
+local SENTRY_PROJECT = plugin and plugin:GetSetting("SENTRY_PROJECT") or ""
 
 -- Sentry is used to log errors on an online dashboard
 local function sendToSentry(message: string, extra: any)
+	if SENTRY_HOST == "" or SENTRY_PROJECT == "" or SENTRY_KEY == "" then
+		warn("An error occurred while using GeoGenerator. Sentry is not configured, so it will not be reported.")
+		return
+	end
 
 	warn("An error occurred while using GeoGenerator, it has been sent to the developers to investigate.")
 
