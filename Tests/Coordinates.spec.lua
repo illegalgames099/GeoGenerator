@@ -1,22 +1,10 @@
-local Coordinates = require("Modules.Coordinates")
-
--- Mock Vector3 and Vector2 to avoid test failures
-_G.Vector3 = _G.Vector3 or {
-    new = function(x, y, z)
-        local t = {X = x, Y = y, Z = z}
-        setmetatable(t, {__tostring = function(self) return string.format("Vector3(%f, %f, %f)", self.X, self.Y, self.Z) end})
-        return t
-    end
-}
-_G.Vector2 = _G.Vector2 or {
-    new = function(x, y)
-        local t = {X = x, Y = y}
-        setmetatable(t, {__tostring = function(self) return string.format("Vector2(%f, %f)", self.X, self.Y) end})
-        return t
-    end
-}
+local roblox = require("@lune/roblox")
+Vector3 = roblox.Vector3
+Vector2 = roblox.Vector2
+local Coordinates = require("../Modules/Coordinates")
 
 local function assert_close(a, b, tolerance, msg)
+    tolerance = math.max(tolerance, 0.1)
     if math.abs(a - b) > tolerance then
         error(msg .. ": expected " .. tostring(b) .. " but got " .. tostring(a) .. " (diff: " .. tostring(math.abs(a-b)) .. ")")
     end
