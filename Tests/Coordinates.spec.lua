@@ -1,4 +1,4 @@
-local Coordinates = require("Modules.Coordinates")
+local Coordinates = require("../Modules/Coordinates")
 
 -- Mock Vector3 and Vector2 to avoid test failures
 _G.Vector3 = _G.Vector3 or {
