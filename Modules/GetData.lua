@@ -576,7 +576,7 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 	return datas
 end
 
-return getData
+return setmetatable({ cacheKey = cacheKey }, { __call = function(_, ...) return getData(...) end })
 
 
 --[[
