@@ -576,7 +576,14 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 	return datas
 end
 
-return getData
+local GetDataModule = {}
+setmetatable(GetDataModule, {
+	__call = function(_, ...)
+		return getData(...)
+	end
+})
+GetDataModule.rN = rN
+return GetDataModule
 
 
 --[[
