@@ -1,6 +1,7 @@
 -- This one is a mess, but hey, it (mostly) works!!!1!
 
 local module = {}
+module._lastYieldTime = os.clock()
 
 -- Modules
 local PolygonTriangulation = require(script.Parent:WaitForChild("PolygonTriangulation"))
@@ -103,7 +104,7 @@ local function createDashedLaneMarkings(model: Instance, cfrm: CFrame, dist: num
 end
 
 -- For all mentions of the value of 'D' variable below:
--- Its a divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs 
+-- Its a divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs
 
 local function findMesh(p: Instance)
 	for _,c in p:GetChildren() do
@@ -138,7 +139,7 @@ end
 
 
 function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
-	
+
 	local RO_SCALE
 	if GenerationRules and GenerationRules["Ro-Scale"] then
 		RO_SCALE = true
@@ -146,7 +147,7 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 
 	for i,part in parts do
 
-		if not parts[i-1] then 
+		if not parts[i-1] then
 			continue
 		end
 
@@ -219,9 +220,9 @@ function module.smoothConnectFlat(parts: {Instance},GenerationRules: any?)
 		end
 
 	end
-	
-	
-	
+
+
+
 end
 
 
@@ -274,13 +275,14 @@ function module.area(tags: any, model: Instance, properties: any, positions: {Ve
 
 	local triangles = PolygonTriangulation(positions)
 
-	if #triangles > 100 then
+	if os.clock() - module._lastYieldTime > 0.014 then
 		task.wait()
+		module._lastYieldTime = os.clock()
 	end
 
 	local height = properties.height or .1
 	height = height/D
-	
+
 	if tags["railway"] and tags["railway"] == "platform" then
 		height *= GenerationRules["Train platform height multiplier"]
 	end
@@ -302,7 +304,7 @@ end
 
 
 function module.way(tags: any,model: Instance, properties: any, positions: {Vector3}, corners: {any}, GenerationRules: any, Map: any, elevationMode: string)
-	
+
 	local scale = Values.Scale.Value
 	local D = 0.28 / scale
 	local parts = {}
@@ -319,15 +321,15 @@ function module.way(tags: any,model: Instance, properties: any, positions: {Vect
 			M *= taggedLaneCount / 1.8 -- most untagged roads already represent roughly two lanes
 		end
 	end
-	
+
 
 	if elevationMode == "terrain" or elevationMode == "elevation" then
-		
+
 		local newPositions = {}
-		
-		
+
+
 		for i,pos in positions do
-			
+
 			if i == 1 then
 				table.insert(newPositions,pos)
 				continue
@@ -349,29 +351,29 @@ function module.way(tags: any,model: Instance, properties: any, positions: {Vect
 				end
 
 			end
-			
+
 			table.insert(newPositions,pos)
 
 		end
-		
+
 		positions = newPositions
 		newPositions = {}
-		
+
 		for i,pos in positions do
 			local newPos = Elevation.getOffsetPosition(pos, Map)
 			if newPos then
 				table.insert(newPositions,newPos)
 			end
 		end
-		
+
 		positions = newPositions
-		
+
 		if #positions < 2 then
 			return
 		end
-		
+
 	end
-	
+
 
 	local sidewalkLeftParts = {}
 	local sidewalkRightParts = {}
