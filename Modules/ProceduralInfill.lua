@@ -509,4 +509,6 @@ end
 	return generatedCount
 end
 
+module.polygonBounds = polygonBounds
+
 return module
