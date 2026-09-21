@@ -1017,7 +1017,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -1036,7 +1035,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -2060,7 +2058,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -2079,7 +2076,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -3114,7 +3110,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -3133,7 +3128,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -3656,7 +3650,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -3675,7 +3668,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -4181,7 +4173,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -4200,7 +4191,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -4700,7 +4690,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -4719,7 +4708,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -5754,7 +5742,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -5773,7 +5760,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -6796,7 +6782,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -6815,7 +6800,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
@@ -7850,7 +7834,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			elevationMode,
 			data["elevation"]
 		)
-		print("ProceduralInfill: added "..infillAdded.." filler buildings")
 	end
 
 	-- ===== Optional: import extra buildings not present in OSM (e.g. Microsoft
@@ -7869,7 +7852,6 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 			Corefolder,
 			GenerationRules["Extra Buildings Dedupe Radius"]
 		)
-		print("GetExtraBuildings: added "..added.." buildings not present in OSM")
 	end
 
 	return true
