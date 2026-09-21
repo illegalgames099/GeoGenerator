@@ -70,6 +70,10 @@ end
 
 local function ringCentroid(positions: {Vector3}): Vector3
 
+	if #positions == 0 then
+		return Vector3.new(0, 0, 0)
+	end
+
 	local sum = Vector3.new(0,0,0)
 	local n = math.max(#positions - 1, 1) -- last point duplicates the first
 
@@ -226,5 +230,6 @@ function module.generate(url: string, offsetVector: Vector2, Map: any, elevation
 
 end
 
+module._ringCentroid = ringCentroid
 
 return module
