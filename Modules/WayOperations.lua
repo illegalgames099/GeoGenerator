@@ -70,7 +70,6 @@ local function createTrainTrack(cfrm: CFrame,dist: number,properties: any,Genera
 
 	if properties.ties.ties3D == true then
 
-		--for i = tieWidth+(dist%tieWidth/2),dist-(dist%tieWidth/2),tieWidth*2.5 do
 		for i = tieWidth,dist,tieWidth*2.5 do
 			local tie = CreatePart(Track,cfrm*CFrame.new(0,0,(dist/2)-i),Vector3.new(tiesWidth,tieHeight,tieWidth))
 			tie.Position = Vector3.new(tie.Position.X,ballast.Position.Y+ballast.Size.Y/2+tie.Size.Y/2,tie.Position.Z)
@@ -614,7 +613,6 @@ local function createTrainTrack(cfrm: CFrame,dist: number,properties: any,Genera
 	
 	if properties.ties.ties3D == true then
 
-		--for i = tieWidth+(dist%tieWidth/2),dist-(dist%tieWidth/2),tieWidth*2.5 do
 		for i = tieWidth,dist,tieWidth*2.5 do
 			local tie = CreatePart(Track,cfrm*CFrame.new(0,0,(dist/2)-i),Vector3.new(tiesWidth,tieHeight,tieWidth))
 			tie.Position = Vector3.new(tie.Position.X,ballast.Position.Y+ballast.Size.Y/2+tie.Size.Y/2,tie.Position.Z)
