@@ -58,12 +58,17 @@ end
 local testEZSuite = function()
     local Elevation
     if isLune then
-        -- In lune, instead of getfenv hack we dynamically patch standard lua global table
-        -- but as `run_tests.sh` already executes this file we want it to work in Lune too.
-        -- We've already verified the `require` mock using `getfenv().require` actually worked
-        -- for `./test_module.lua` import earlier.
+        local luau = require("@lune/luau")
+        local fs = require("@lune/fs")
+
+        local source = fs.readFile("Modules/Elevation.lua")
+
+        local chunk = luau.load(source, { debugName = "Modules/Elevation.lua", injectGlobals = true })
+
+        local env = getfenv(chunk)
+
         local original_require = require
-        getfenv().require = function(arg)
+        env.require = function(arg)
             if type(arg) == "table" and arg.getGenerationRules then
                 return arg
             elseif type(arg) == "table" and arg.name == "MockRayTriangle" then
@@ -72,7 +77,7 @@ local testEZSuite = function()
             return original_require(arg)
         end
 
-        getfenv().script = {
+        env.script = {
             Parent = {
                 WaitForChild = function(self, childName)
                     if childName == "UI" then
@@ -86,15 +91,18 @@ local testEZSuite = function()
                 RayTriangleIntersection = {name = "MockRayTriangle"}
             }
         }
-        getfenv().task = Task
 
-        getfenv().workspace = {
+        env.task = Task
+
+        env.workspace = {
             Raycast = function(self, origin, direction, params)
                 return nil
             end
         }
+        env.Vector3 = Vector3
 
-        Elevation = original_require("../Modules/Elevation")
+        setfenv(chunk, env)
+        Elevation = chunk()
     else
         describe = _G.describe or getfenv().describe
         it = _G.it or getfenv().it
