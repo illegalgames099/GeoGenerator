@@ -166,7 +166,7 @@ function module.start(canvas: CanvasGroup)
 			m.TieTexturePart.Size = Vector3.new(T["Ballast Width"]/D*0.6,.02,dist)
 			m.TieTexturePart.Position = ballast.Position + Vector3.new(0,ballast.Size.Y/2,0)
 
-			for _,child in m.TieTexturePart:GetChildren() do child:Destroy() end --removing the texture
+			m.TieTexturePart:ClearAllChildren() --removing the texture
 
 			local texture = Objects.Assets.Textures[T["Tie Texture"]]:Clone()
 			texture.Face = "Top"
