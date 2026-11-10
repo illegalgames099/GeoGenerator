@@ -26,9 +26,9 @@ local function triangle(parent: Instance,a: Vector3,b: Vector3,c: Vector3)
 
 	ab, ac, bc = b - a, c - a, c - b
 
-	local right = ac:Cross(ab).unit
-	local up = bc:Cross(right).unit
-	local back = bc.unit
+	local right = ac:Cross(ab).Unit
+	local up = bc:Cross(right).Unit
+	local back = bc.Unit
 
 	local height = math.abs(ab:Dot(up))
 
