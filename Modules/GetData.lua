@@ -580,6 +580,21 @@ local function getData(corners1: {Vector2}, corners2: {Vector2}, offsetVector: V
 	return datas
 end
 
+
+local _TESTING = script and script:GetAttribute("_TESTING") or false
+if _TESTING then
+	local testProxy = setmetatable({
+		splitBBox = splitBBox,
+		mergeElements = mergeElements,
+		cacheKey = cacheKey,
+		getCachedResponse = getCachedResponse,
+		setCachedResponse = setCachedResponse,
+	}, {
+		__call = function(_, ...) return getData(...) end
+	})
+	return testProxy
+end
+
 return getData
 
 
