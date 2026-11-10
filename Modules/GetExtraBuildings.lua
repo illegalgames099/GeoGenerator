@@ -107,12 +107,48 @@ function module.generate(url: string, offsetVector: Vector2, Map: any, elevation
 	end
 
 	local host = string.match(authority, "@([^@]+)$") or authority
-	host = string.match(host, "^([^:]+)") or host
+
+	local ipv6_host = string.match(host, "^(%[.-%])")
+	if ipv6_host then
+		host = ipv6_host
+	else
+		host = string.match(host, "^([^:]+)") or host
+	end
+
 	host = string.lower(host)
 
-	if host == "localhost" or host == "127.0.0.1" or host == "0.0.0.0" then
+	local host_no_brackets = string.match(host, "^%[(.*)%]$") or host
+
+	if host == "localhost" or host == "0.0.0.0" then
 		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
 		return 0
+	elseif string.match(host_no_brackets, "^0*127%.%d+%.%d+%.%d+$") or string.match(host_no_brackets, "^0*127%.%d+%.%d+$") or string.match(host_no_brackets, "^0*127%.%d+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif host_no_brackets == "::1" or host_no_brackets == "::" then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif string.match(host_no_brackets, "^[0:]+1$") or string.match(host_no_brackets, "^[0:]+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif string.match(host_no_brackets, "^0+177%.%d+%.%d+%.%d+$") or string.match(host_no_brackets, "^0+177%.%d+%.%d+$") or string.match(host_no_brackets, "^0+177%.%d+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif string.match(host_no_brackets, "^0x7f%.%x+%.%x+%.%x+$") or string.match(host_no_brackets, "^0x7f%.%x+%.%x+$") or string.match(host_no_brackets, "^0x7f%.%x+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif string.match(host_no_brackets, "^0x7f%x%x%x%x%x%x$") or string.match(host_no_brackets, "^0+177%d%d%d%d%d%d%d%d$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	elseif string.match(host_no_brackets, ":0*127%.%d+%.%d+%.%d+$") or string.match(host_no_brackets, ":0*127%.%d+%.%d+$") or string.match(host_no_brackets, ":0*127%.%d+$") then
+		warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+		return 0
+	else
+		local num = tonumber(host_no_brackets)
+		if num and num >= 2130706432 and num <= 2147483647 then
+			warn("GetExtraBuildings: URL points to disallowed internal/local network '"..tostring(url).."'")
+			return 0
+		end
 	end
 
 	if string.match(host, "^192%.168%.%d+%.%d+$") or string.match(host, "^10%.%d+%.%d+%.%d+$") or string.match(host, "^169%.254%.%d+%.%d+$") then
