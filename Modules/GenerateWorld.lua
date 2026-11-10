@@ -1779,14 +1779,12 @@ local function GenerateWorld(data: any, offsetVector: Vector2, baseSize: Vector3
 
 			for b = 1,#Map[a] - 1 do
 
-				-- When converting triangles to parts, there are visible lines along their edges, makes terrain look less seamless
-				-- To fix this, I make them a bit bigger, forcing them to blend together with other triangles
 				-- Also add the elevation offset - if someone were to generate mount everest, it will be generated from around the zero Y-level
 
-				local v1 = (Map[a][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(worldScale,0,-worldScale)
-				local v2 = (Map[a+1][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(worldScale,0,worldScale)
-				local v3 = (Map[a][b+1]["v3"]  + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(-worldScale,0,-worldScale)
-				local v4 = (Map[a+1][b+1]["v3"]  + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1) + Vector3.new(-worldScale,0,worldScale)
+				local v1 = (Map[a][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1)
+				local v2 = (Map[a+1][b]["v3"] + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1)
+				local v3 = (Map[a][b+1]["v3"]  + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1)
+				local v4 = (Map[a+1][b+1]["v3"]  + Vector3.new(0,elevationOffset,0)) * Vector3.new(1,elevationMultiplier,1)
 
 				local tris1 = Triangle(workspace.World,v1,v2,v4)
 				local tris2 = Triangle(workspace.World,v1,v3,v4)
