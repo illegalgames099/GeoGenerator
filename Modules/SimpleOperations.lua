@@ -106,11 +106,7 @@ end
 -- Its a divider value, properties are in meters, 1 stud is 0.28cm so we do property/D to determine it in studs 
 
 local function findMesh(p: Instance)
-	for _,c in p:GetChildren() do
-		if c:IsA("BlockMesh") or c:IsA("SpecialMesh") or c:IsA("MeshPart") then
-			return c
-		end
-	end
+	return p:FindFirstChildWhichIsA("BlockMesh") or p:FindFirstChildWhichIsA("SpecialMesh") or p:FindFirstChildWhichIsA("MeshPart")
 end
 local function adjustPartScaleAndCFrame(p: Instance, j: number, dist: number)
 	local oldDist = p.Size.Z/2
