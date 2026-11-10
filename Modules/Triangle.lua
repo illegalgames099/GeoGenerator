@@ -8,7 +8,7 @@ local CreatePart = require(script.Parent:WaitForChild("CreatePart"))
 -- Note: the size.X of generated wedges is explicitly set to 0. This relies on the Roblox engine
 -- rendering wedges with a width of 0 as 2-dimensional 3D planes without causing a crash or
 -- visual bug. This effectively eliminates visible seams/cracks between terrain triangles
--- without needing to use geometry overlap hacks.
+-- without needing to use geometry overlaps.
 
 local function triangle(parent: Instance,a: Vector3,b: Vector3,c: Vector3)
 
