@@ -174,13 +174,6 @@ local function createTrainTrack(cfrm: CFrame,dist: number,properties: any,Genera
 				mesh.Scale = Vector3.new(1,1,1)
 			end
 
-			--local mesh = game.ReplicatedStorage["OSM Assets"].Meshes[railProps.mesh]:Clone()
-			--local meshOffset = Vector3.new(0,mesh.Offset.Y,mesh.Offset.Z)
-
-			--mesh.Parent = rail
-			--mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y, rail.Size.Z)
-			--mesh.Offset = meshOffset
-
 		end
 
 	end
@@ -716,13 +709,6 @@ local function createTrainTrack(cfrm: CFrame,dist: number,properties: any,Genera
 			if mesh:IsA("BlockMesh") then
 				mesh.Scale = Vector3.new(1,1,1)
 			end
-
-			--local mesh = game.ReplicatedStorage["OSM Assets"].Meshes[railProps.mesh]:Clone()
-			--local meshOffset = Vector3.new(0,mesh.Offset.Y,mesh.Offset.Z)
-
-			--mesh.Parent = rail
-			--mesh.Scale = Vector3.new(mesh.Scale.X,mesh.Scale.Y, rail.Size.Z)
-			--mesh.Offset = meshOffset
 
 		end
 
