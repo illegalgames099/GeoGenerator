@@ -50,6 +50,13 @@ local function createMockPart(size, cframe)
         return className == "Part" or className == "BasePart"
     end
 
+    function part:FindFirstChildWhichIsA(className)
+        for _, c in ipairs(self._children) do
+            if c:IsA(className) then return c end
+        end
+        return nil
+    end
+
     function part:AddChild(child)
         table.insert(self._children, child)
     end
