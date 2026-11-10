@@ -422,7 +422,14 @@ local function getElevation(corners1: {Vector2} ,corners2: {Vector2}, offsetVect
 
 				totalJSONsize += string.len(response)
 
-				response = HS:JSONDecode(response)
+					local decodeSuccess, decodedResponse = pcall(function()
+						return HS:JSONDecode(response)
+					end)
+					if decodeSuccess and type(decodedResponse) == "table" then
+						response = decodedResponse
+					else
+						response = {}
+					end
 
 				if response["elevation"] then
 					for k = 1, #latitudes do
