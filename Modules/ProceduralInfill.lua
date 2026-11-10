@@ -509,4 +509,8 @@ end
 	return generatedCount
 end
 
+module.pointInPolygon = pointInPolygon
+module.wayPositions = wayPositions
+module.polygonBounds = polygonBounds
+
 return module
